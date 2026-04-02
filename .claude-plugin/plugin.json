@@ -1,0 +1,13 @@
+{
+  "name": "claude-feature-flow",
+  "version": "1.0.0",
+  "description": "Structured feature development workflow — from PRD to merged PR",
+  "author": {
+    "name": "Aurélien Allienne",
+    "email": "aurelien.allienne@gmail.com",
+    "url": "https://github.com/allienna"
+  },
+  "repository": "https://github.com/allienna/claude-feature-flow",
+  "license": "MIT",
+  "keywords": ["workflow", "feature-development", "planning", "code-review", "productivity"]
+}
