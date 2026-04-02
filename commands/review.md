@@ -1,7 +1,7 @@
 ---
 description: Review a completed feature against its spec. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash, Read, Write, Grep, Glob
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 # Review

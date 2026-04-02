@@ -1,6 +1,6 @@
 ---
 description: Generate or update the project constitution from the PRD
-allowed-tools: Bash(ls:*), Read, Write, Grep, Glob
+allowed-tools: Bash(ls:*), Read, Write, Edit, Grep, Glob
 ---
 
 # Constitution

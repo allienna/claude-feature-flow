@@ -1,7 +1,7 @@
 ---
 description: Create a technical implementation plan from a spec. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash(ls:*), Read, Write, Grep, Glob
+allowed-tools: Bash(ls:*), Read, Write, Edit, Grep, Glob
 ---
 
 # Plan

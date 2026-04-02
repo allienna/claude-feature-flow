@@ -46,13 +46,10 @@ No project-specific configuration needed. Commands detect your tech stack, test 
 
 ### From the marketplace
 
-Add the marketplace and install the plugin:
+Add the marketplace and install the plugin from within Claude Code:
 
-```bash
-# Add the marketplace (one-time)
+```
 /plugin marketplace add allienna/claude-feature-flow
-
-# Install the plugin
 /plugin install claude-feature-flow@claude-feature-flow
 ```
 

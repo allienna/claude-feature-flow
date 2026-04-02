@@ -1,7 +1,7 @@
 ---
 description: Create or update the Product Requirements Document through guided discovery
 argument-hint: "[update]"
-allowed-tools: Bash(ls:*), Read, Write, Grep, Glob
+allowed-tools: Bash(ls:*), Read, Write, Edit, Grep, Glob
 ---
 
 # PRD — Product Requirements Document

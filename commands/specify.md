@@ -1,7 +1,7 @@
 ---
 description: Create a feature specification. Auto-detects the next feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash(mkdir:*), Bash(ls:*), Bash(git:*), Read, Write, Grep, Glob
+allowed-tools: Bash(mkdir:*), Bash(ls:*), Bash(git:*), Read, Write, Edit, Grep, Glob
 ---
 
 # Specify

@@ -1,5 +1,5 @@
 ---
-description: "Full pipeline: implement all tasks → review → qa → ship. Use /build quick to skip review and ship."
+description: "Full pipeline: implement all tasks → review → qa → ship. Use /build quick to skip review and skip ship."
 argument-hint: "[quick] [feature-name]"
 allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
