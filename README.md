@@ -1,117 +1,74 @@
-# claude-feature-flow
+# Feature Flow
 
-A reusable set of Claude Code slash commands that provide a structured feature development workflow — from product requirements to merged PR.
+A structured feature development workflow — from product requirements to merged PR. Available for both **Claude Code** and **GitHub Copilot**.
 
 ## Workflow
 
 ```
-/prd → /constitution → /roadmap → /specify → /plan → /tasks → /implement → /review → /qa → /ship → /merge
+prd → constitution → roadmap → specify → plan → tasks → implement → review → qa → ship → merge
 ```
 
-### Core workflow
+### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/prd` | Create or update the Product Requirements Document through guided discovery |
-| `/constitution` | Generate or update the project constitution from the PRD |
-| `/roadmap` | Generate or update the feature roadmap from the PRD |
-| `/specify` | Create a feature specification (auto-detects the next feature) |
-| `/plan` | Create a technical implementation plan from a spec (auto-detects) |
-| `/tasks` | Break a plan into atomic tasks (auto-detects) |
-| `/implement` | Implement the next pending task (auto-detects) |
-| `/review` | Review a completed feature against its spec (auto-detects) |
-| `/qa` | Run project-wide quality audit |
-| `/ship` | Create branch, commit, push and open a PR |
+| `prd` | Create or update the Product Requirements Document through guided discovery |
+| `constitution` | Generate or update the project constitution from the PRD |
+| `roadmap` | Generate or update the feature roadmap from the PRD |
+| `specify` | Create a feature specification (auto-detects the next feature) |
+| `plan` | Create a technical implementation plan from a spec (auto-detects) |
+| `tasks` | Break a plan into atomic tasks (auto-detects) |
+| `implement` | Implement the next pending task (auto-detects) |
+| `review` | Review a completed feature against its spec (auto-detects) |
+| `qa` | Run project-wide quality audit |
+| `ship` | Create branch, commit, push and open a PR |
+| `build` | Full pipeline: implement all tasks, review, qa, ship (`build quick` to skip review) |
+| `merge` | Address PR comments, squash merge, and update local main |
+| `review-pr` | Fetch PR review comments, fix issues, reply to each comment |
+| `status` | Show project status and suggest the next action |
 
-### Automation & maintenance
+## Choose your platform
 
-| Command | Description |
-|---------|-------------|
-| `/build` | Full pipeline: implement all tasks, review, qa, ship (use `/build quick` to skip review) |
-| `/merge` | Address PR comments, squash merge, and update local main |
-| `/review-pr` | Fetch PR review comments, fix issues, reply to each comment |
-| `/status` | Show project status and suggest the next action |
+| Platform | Guide | Install |
+|----------|-------|---------|
+| Claude Code | [docs/claude-code.md](docs/claude-code.md) | `claude plugin install claude-feature-flow@claude-feature-flow` |
+| GitHub Copilot | [docs/github-copilot.md](docs/github-copilot.md) | Copy resources to `.github/` or use ADEO CLI |
 
-## Prerequisites
+## How it works
+
+Feature Flow creates a chain of artifacts that each command reads and writes:
+
+```
+PRD.md                              # Product Requirements Document
+specs/
+  constitution.md                   # Non-negotiable project principles
+  roadmap.md                        # Feature roadmap with dependencies
+  {NNN}-{feature-name}/            # Feature track (e.g., 001-auth-client/)
+    spec.md                         # Feature specification & acceptance criteria
+    plan.md                         # Technical implementation plan
+    tasks.md                        # Atomic task breakdown
+    review.md                       # Spec compliance review
+qa-report.md                        # Project-wide quality audit
+```
 
 Commands auto-discover your project setup from:
 
-- **`PRD.md`** — Product requirements (used by `/prd`, `/roadmap`, `/specify`, `/plan`)
-- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/implement`, `/qa`, `/review`, `/ship`)
+- **`PRD.md`** — Product requirements (used by prd, roadmap, specify, plan)
+- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by implement, qa, review, ship)
 - **`specs/`** — Feature tracks created by the workflow
 
-No project-specific configuration needed. Commands detect your tech stack, test runner, linter, and formatter from `CLAUDE.md`.
-
-## Install
-
-### From the marketplace
-
-Add the marketplace and install the plugin from within Claude Code:
-
-```
-/plugin marketplace add allienna/claude-feature-flow
-/plugin install claude-feature-flow@claude-feature-flow
-```
-
-Or from the CLI:
-
-```bash
-claude plugin install claude-feature-flow@claude-feature-flow
-```
-
-### From a local clone
-
-```bash
-git clone git@github.com:allienna/claude-feature-flow.git ~/claude-feature-flow
-claude --plugin-dir ~/claude-feature-flow
-```
-
-### Via symlinks (legacy)
-
-The included `install.sh` script links commands into your Claude Code configuration:
-
-```bash
-git clone git@github.com:allienna/claude-feature-flow.git ~/claude-feature-flow
-
-# Global (all projects)
-~/claude-feature-flow/install.sh ~/.claude/commands
-
-# Per-project (from your project root)
-~/claude-feature-flow/install.sh
-```
-
-Symlinks propagate updates automatically — pull the latest and all projects get updated commands.
-
-### Manual
-
-Copy the `commands/*.md` files into your `.claude/commands/` directory.
-
-## Updating
-
-**Marketplace install** — update via CLI or slash command:
-
-```bash
-claude plugin update claude-feature-flow@claude-feature-flow
-# or from within Claude Code:
-/plugin marketplace update
-```
-
-**Local clone or symlinks** — just pull:
-
-```bash
-cd ~/claude-feature-flow && git pull
-```
-
-Changes propagate immediately since Claude Code reads the files directly.
+No project-specific configuration needed. Commands detect your tech stack, test runner, linter, and formatter automatically.
 
 ## Getting started
 
-1. Run `/prd` to create your Product Requirements Document through a guided interview
-2. Run `/constitution` to establish non-negotiable project principles
-3. Run `/roadmap` to break the PRD into ordered features
-4. Run `/specify` to detail the first feature, then `/plan` and `/tasks`
-5. Run `/implement` to start building — or `/build` to run the full pipeline
-6. Run `/status` at any time to see where you are and what to do next
+1. **Create your PRD** through a guided interview
+2. **Set the constitution** — non-negotiable project principles
+3. **Build the roadmap** — break the PRD into ordered features
+4. **Specify** the first feature, then **plan** and **tasks**
+5. **Implement** tasks one by one — or run **build** for full automation
+6. Check **status** at any time to see where you are and what to do next
+
+See the platform-specific guides for detailed installation and usage instructions.
 
 ## License
 
