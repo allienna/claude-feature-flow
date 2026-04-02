@@ -1,0 +1,53 @@
+id: feature-flow
+name: Feature Flow
+description: Structured feature development workflow — from PRD through implementation, review, and merge using a state-machine approach with 14 integrated prompts and an orchestrator agent.
+tags: [feature-development, workflow, project-management, automation]
+
+items:
+  # Orchestrator agent
+  - path: agents/feature-flow.agent.md
+    kind: agent
+
+  # Instruction (persistent workflow context)
+  - path: instructions/feature-flow.instructions.md
+    kind: instruction
+
+  # Foundation prompts
+  - path: prompts/feature-flow-prd.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-constitution.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-roadmap.prompt.md
+    kind: prompt
+
+  # Specification prompts
+  - path: prompts/feature-flow-specify.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-plan.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-tasks.prompt.md
+    kind: prompt
+
+  # Implementation prompts
+  - path: prompts/feature-flow-implement.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-review.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-build.prompt.md
+    kind: prompt
+
+  # Quality & deployment prompts
+  - path: prompts/feature-flow-qa.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-ship.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-merge.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-review-pr.prompt.md
+    kind: prompt
+  - path: prompts/feature-flow-status.prompt.md
+    kind: prompt
+
+display:
+  ordering: manual
+  show_badge: true
