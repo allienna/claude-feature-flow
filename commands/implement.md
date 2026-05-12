@@ -50,6 +50,7 @@ Read `specs/{NNN}-$ARGUMENTS/tasks.md`. Find the first `- [ ]` task.
 Read:
 - `specs/{NNN}-$ARGUMENTS/spec.md` and `plan.md`
 - `CLAUDE.md`
+- `DESIGN.md` if the plan has a "Design Mobilization" section. Apply tokens by name — do NOT invent colors, spacing, radii, or new components. If the plan references a component not present in the inventory, STOP and ask the user to run `/design update` first.
 - Source files that this task modifies (if they exist)
 
 ## Step 3: Implement

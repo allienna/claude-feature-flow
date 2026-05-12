@@ -54,6 +54,9 @@ Based on the state, suggest ONE clear next action:
 
 | State | Recommendation |
 |---|---|
+| No PRD | "Run `/prd` to define what you are building." |
+| PRD exists, no constitution | "Run `/constitution` to set the non-negotiables." |
+| Constitution exists, no DESIGN.md | "Run `/design` to define the design system." |
 | No roadmap | "Run `/roadmap` to define your features." |
 | Roadmap exists, no tracks | "Run `/specify` to start the first feature." |
 | Track has draft spec | "Review and approve the spec, then `/plan {name}`." |

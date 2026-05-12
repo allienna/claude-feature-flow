@@ -5,7 +5,7 @@ A reusable set of Claude Code slash commands that provide a structured feature d
 ## Workflow
 
 ```
-/prd → /constitution → /roadmap → /specify → /plan → /tasks → /implement → /review → /qa → /ship → /merge
+/prd → /constitution → /design → /roadmap → /specify → /plan → /tasks → /implement → /review → /qa → /ship → /merge
 ```
 
 ### Core workflow
@@ -14,6 +14,7 @@ A reusable set of Claude Code slash commands that provide a structured feature d
 |---------|-------------|
 | `/prd` | Create or update the Product Requirements Document through guided discovery |
 | `/constitution` | Generate or update the project constitution from the PRD |
+| `/design` | Create or update `DESIGN.md` — the project design system (tokens, components, surfaces, states, a11y) |
 | `/roadmap` | Generate or update the feature roadmap from the PRD |
 | `/specify` | Create a feature specification (auto-detects the next feature) |
 | `/plan` | Create a technical implementation plan from a spec (auto-detects) |
@@ -38,7 +39,9 @@ Commands auto-discover your project setup from:
 
 - **`PRD.md`** — Product requirements (used by `/prd`, `/roadmap`, `/specify`, `/plan`)
 - **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/implement`, `/qa`, `/review`, `/ship`)
+- **`DESIGN.md`** — Design system: tokens, components, surfaces, states, a11y (used by `/specify`, `/plan`, `/implement`, `/review`)
 - **`specs/`** — Feature tracks created by the workflow
+- **`design/mockups/`** (optional) — Mockup files ingested by `/design` to reconcile visuals with the design system
 
 No project-specific configuration needed. Commands detect your tech stack, test runner, linter, and formatter from `CLAUDE.md`.
 
@@ -108,10 +111,11 @@ Changes propagate immediately since Claude Code reads the files directly.
 
 1. Run `/prd` to create your Product Requirements Document through a guided interview
 2. Run `/constitution` to establish non-negotiable project principles
-3. Run `/roadmap` to break the PRD into ordered features
-4. Run `/specify` to detail the first feature, then `/plan` and `/tasks`
-5. Run `/implement` to start building — or `/build` to run the full pipeline
-6. Run `/status` at any time to see where you are and what to do next
+3. Run `/design` to produce `DESIGN.md` — the design system referenced by every downstream UI-touching command
+4. Run `/roadmap` to break the PRD into ordered features
+5. Run `/specify` to detail the first feature, then `/plan` and `/tasks`
+6. Run `/implement` to start building — or `/build` to run the full pipeline
+7. Run `/status` at any time to see where you are and what to do next
 
 ## License
 
