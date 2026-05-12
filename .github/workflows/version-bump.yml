@@ -1,15 +1,20 @@
 name: Version bump
 
 # Bumps the plugin version on every push to main, driven by the
-# Conventional Commit type of the merge commit:
-#   feat:               -> minor   (e.g. a new command)
-#   fix: / perf: / refactor: -> patch   (e.g. fixing an existing command)
-#   feat!: / BREAKING CHANGE -> major
+# Conventional Commit header of the merge commit:
+#   feat:                    -> minor   (e.g. a new command)
+#   fix: / perf: / refactor:  -> patch   (e.g. fixing an existing command)
+#   feat!: / BREAKING CHANGE  -> major
 #   anything else (docs:, chore:, ci:, ...) -> no bump
 #
+# The header is looked up as the first line of the full commit message
+# (`git log -1 --pretty=%B`) that matches a Conventional Commit header.
+# That covers squash-merge commits (header is the subject) as well as
+# GitHub "merge commit" merges (header is usually the first line of the body).
+#
 # When a bump happens it updates .claude-plugin/plugin.json and
-# .claude-plugin/marketplace.json, commits the change as
-# "chore(release): vX.Y.Z" and pushes a matching vX.Y.Z tag.
+# .claude-plugin/marketplace.json against the current state of main,
+# commits the change as "chore(release): vX.Y.Z" and pushes a matching tag.
 
 on:
   push:
@@ -35,16 +40,17 @@ jobs:
       - name: Determine bump type
         id: bump
         run: |
-          subject="$(git log -1 --pretty=%s)"
-          body="$(git log -1 --pretty=%b)"
-          echo "Commit subject: $subject"
+          message="$(git log -1 --pretty=%B)"
+          # First line that looks like a Conventional Commit header.
+          header="$(printf '%s\n' "$message" | grep -Em1 '^[a-z]+(\([^)]*\))?!?:' || true)"
+          echo "Conventional Commit header: ${header:-<none>}"
           type=""
-          if printf '%s\n%s' "$subject" "$body" | grep -q 'BREAKING CHANGE' \
-             || printf '%s' "$subject" | grep -Eq '^[a-z]+(\([^)]*\))?!:'; then
+          if printf '%s\n' "$message" | grep -q 'BREAKING CHANGE' \
+             || printf '%s' "$header" | grep -Eq '^[a-z]+(\([^)]*\))?!:'; then
             type=major
-          elif printf '%s' "$subject" | grep -Eq '^feat(\([^)]*\))?!?:'; then
+          elif printf '%s' "$header" | grep -Eq '^feat(\([^)]*\))?!?:'; then
             type=minor
-          elif printf '%s' "$subject" | grep -Eq '^(fix|perf|refactor)(\([^)]*\))?!?:'; then
+          elif printf '%s' "$header" | grep -Eq '^(fix|perf|refactor)(\([^)]*\))?!?:'; then
             type=patch
           fi
           if [ -z "$type" ]; then
@@ -54,10 +60,18 @@ jobs:
           fi
           echo "type=$type" >> "$GITHUB_OUTPUT"
 
-      - name: Compute new version
+      - name: Bump version, commit and tag
         if: steps.bump.outputs.type != ''
-        id: version
         run: |
+          set -euo pipefail
+
+          # Re-sync to the current tip of main so the version is computed and
+          # committed on top of any release commit a prior run may have pushed
+          # (queued runs are serialized by the concurrency group, but this run's
+          # checkout is the triggering SHA, which may already be stale).
+          git fetch origin main
+          git checkout -B main origin/main
+
           current="$(jq -r .version .claude-plugin/plugin.json)"
           IFS='.' read -r major minor patch <<< "$current"
           case "${{ steps.bump.outputs.type }}" in
@@ -67,20 +81,11 @@ jobs:
           esac
           new="$major.$minor.$patch"
           echo "Bumping $current -> $new"
-          echo "new=$new" >> "$GITHUB_OUTPUT"
 
-      - name: Update manifests
-        if: steps.bump.outputs.type != ''
-        run: |
-          new="${{ steps.version.outputs.new }}"
           tmp="$(mktemp)"
           jq --arg v "$new" '.version = $v' .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
           jq --arg v "$new" '.plugins |= map(if .name == "claude-feature-flow" then .version = $v else . end)' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
 
-      - name: Commit, tag and push
-        if: steps.bump.outputs.type != ''
-        run: |
-          new="${{ steps.version.outputs.new }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .claude-plugin/plugin.json .claude-plugin/marketplace.json
