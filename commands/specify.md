@@ -46,7 +46,7 @@ Read:
 - `specs/roadmap.md` (get PRD sections and dependencies for this feature)
 - `PRD.md` (focus on sections referenced in roadmap — if missing, WARN: "No PRD.md found. The spec will be based on roadmap information only.")
 - `CLAUDE.md` (if missing, WARN: "No CLAUDE.md found. Conventions will not be incorporated into the spec.")
-- `DESIGN.md` (if the feature is user-facing). If the feature touches a surface listed in `DESIGN.md` but `DESIGN.md` is missing: "This feature touches UI but `DESIGN.md` is missing. Run `/design` first." STOP.
+- `DESIGN.md` if it exists. If it's missing, decide whether this feature is user-facing using the signals you *do* have — the roadmap entry, the PRD sections it references, and the feature name (anything involving UI, screens, pages, CLI output, or a named surface). If it looks user-facing and `DESIGN.md` is absent: "This feature looks user-facing but `DESIGN.md` is missing. Run `/design` first, or confirm to proceed without a design system." STOP and wait for confirmation.
 
 ## Step 2: Check dependencies
 
