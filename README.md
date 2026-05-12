@@ -117,6 +117,19 @@ Changes propagate immediately since Claude Code reads the files directly.
 6. Run `/implement` to start building — or `/build` to run the full pipeline
 7. Run `/status` at any time to see where you are and what to do next
 
+## Versioning
+
+The plugin version is bumped automatically by [`.github/workflows/version-bump.yml`](.github/workflows/version-bump.yml) on every push to `main`, based on the [Conventional Commit](https://www.conventionalcommits.org/) type of the merge commit:
+
+| Commit type | Bump | Typical case |
+|-------------|------|--------------|
+| `feat:` | minor | a new command |
+| `fix:`, `perf:`, `refactor:` | patch | fixing or reworking an existing command |
+| `feat!:` or `BREAKING CHANGE` | major | incompatible change |
+| anything else (`docs:`, `chore:`, `ci:`, …) | none | no release |
+
+When a bump occurs the workflow updates `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, commits as `chore(release): vX.Y.Z`, and pushes a matching `vX.Y.Z` tag. If `main` is protected, allow the `github-actions[bot]` actor to push (or bypass the rule for it).
+
 ## License
 
 MIT

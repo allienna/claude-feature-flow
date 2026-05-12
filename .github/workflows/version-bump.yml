@@ -1,0 +1,90 @@
+name: Version bump
+
+# Bumps the plugin version on every push to main, driven by the
+# Conventional Commit type of the merge commit:
+#   feat:               -> minor   (e.g. a new command)
+#   fix: / perf: / refactor: -> patch   (e.g. fixing an existing command)
+#   feat!: / BREAKING CHANGE -> major
+#   anything else (docs:, chore:, ci:, ...) -> no bump
+#
+# When a bump happens it updates .claude-plugin/plugin.json and
+# .claude-plugin/marketplace.json, commits the change as
+# "chore(release): vX.Y.Z" and pushes a matching vX.Y.Z tag.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    # Never react to our own release commit (also guards against loops).
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine bump type
+        id: bump
+        run: |
+          subject="$(git log -1 --pretty=%s)"
+          body="$(git log -1 --pretty=%b)"
+          echo "Commit subject: $subject"
+          type=""
+          if printf '%s\n%s' "$subject" "$body" | grep -q 'BREAKING CHANGE' \
+             || printf '%s' "$subject" | grep -Eq '^[a-z]+(\([^)]*\))?!:'; then
+            type=major
+          elif printf '%s' "$subject" | grep -Eq '^feat(\([^)]*\))?!?:'; then
+            type=minor
+          elif printf '%s' "$subject" | grep -Eq '^(fix|perf|refactor)(\([^)]*\))?!?:'; then
+            type=patch
+          fi
+          if [ -z "$type" ]; then
+            echo "No conventional commit type that warrants a version bump — skipping."
+          else
+            echo "Bump type: $type"
+          fi
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+
+      - name: Compute new version
+        if: steps.bump.outputs.type != ''
+        id: version
+        run: |
+          current="$(jq -r .version .claude-plugin/plugin.json)"
+          IFS='.' read -r major minor patch <<< "$current"
+          case "${{ steps.bump.outputs.type }}" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+          new="$major.$minor.$patch"
+          echo "Bumping $current -> $new"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifests
+        if: steps.bump.outputs.type != ''
+        run: |
+          new="${{ steps.version.outputs.new }}"
+          tmp="$(mktemp)"
+          jq --arg v "$new" '.version = $v' .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
+          jq --arg v "$new" '.plugins |= map(if .name == "claude-feature-flow" then .version = $v else . end)' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
+
+      - name: Commit, tag and push
+        if: steps.bump.outputs.type != ''
+        run: |
+          new="${{ steps.version.outputs.new }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/plugin.json .claude-plugin/marketplace.json
+          git commit -m "chore(release): v$new"
+          git tag "v$new"
+          git push origin HEAD:main
+          git push origin "v$new"
