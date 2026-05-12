@@ -39,6 +39,7 @@ Read:
 - `specs/{NNN}-$ARGUMENTS/tasks.md` — Task list
 - `specs/constitution.md` — Non-negotiable principles (if it exists)
 - `PRD.md` — Error handling patterns, relevant requirements (if it exists)
+- `DESIGN.md` — Tokens, component inventory, surface conventions, a11y baseline (if it exists and the plan has a "Design Mobilization" section)
 
 ## Step 2: Task completion check
 
@@ -69,7 +70,16 @@ Use Grep to search for error handling patterns in the source files modified by t
 Read `CLAUDE.md` for "Key patterns" or architectural conventions. Verify the implementation follows them.
 If CLAUDE.md defines specific patterns (e.g., structured error returns, response formatting), grep for adherence.
 
-### 4.4 Acceptance criteria
+### 4.4 Design system compliance
+If `DESIGN.md` exists AND the plan declared design mobilization, verify:
+- UI code references declared tokens by name (grep for raw hex colors, hardcoded pixel spacing not matching the scale, ad-hoc shadows) — flag any drift from the token system.
+- Every rendered component appears in the `Component Inventory` section.
+- The five state conventions (loading, empty, error, success, offline) are implemented for each interactive surface the feature touches.
+- A11y baseline holds: focus management, keyboard support, contrast, `prefers-reduced-motion`, color independence.
+
+If `DESIGN.md` is absent and the feature is user-facing: WARN "No DESIGN.md — UI conformance not checked. Run `/design`."
+
+### 4.5 Acceptance criteria
 For each acceptance criterion in the spec, verify:
 - Is there code that implements it?
 - Is there a test that covers it?
@@ -111,6 +121,10 @@ Create `specs/{NNN}-$ARGUMENTS/review.md`:
 |---|---|---|
 | Error handling | PASS/FAIL/N/A | {matches spec patterns?} |
 | Codebase patterns | PASS/FAIL/N/A | {follows CLAUDE.md conventions?} |
+| Design tokens applied | PASS/FAIL/N/A | {UI code uses declared tokens, no raw values} |
+| Component inventory respected | PASS/FAIL/N/A | {no undeclared components rendered} |
+| State coverage (loading/empty/error/success/offline) | PASS/FAIL/N/A | {all five handled per surface} |
+| A11y baseline | PASS/FAIL/N/A | {focus, keyboard, contrast, reduced-motion, color-independence} |
 
 ## Constitution Compliance
 {If specs/constitution.md exists, check each principle. Otherwise: "No constitution — run `/constitution` to create one."}

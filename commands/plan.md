@@ -40,6 +40,7 @@ Read:
 - `specs/{NNN}-$ARGUMENTS/spec.md`
 - `PRD.md` (sections referenced in the spec — if missing, WARN: "No PRD.md found. Plan will be based on spec only.")
 - `CLAUDE.md` (if missing, WARN: "No CLAUDE.md found. Plan will not incorporate project conventions.")
+- `DESIGN.md` (if the spec has a "Design References" section). Pull the named tokens, components, and surfaces — the plan will cite them by name.
 
 ## Step 2: Analyze existing codebase
 
@@ -90,6 +91,15 @@ Create `specs/{NNN}-$ARGUMENTS/plan.md`:
 - Tests and verification
 
 (Add or remove phases as appropriate for the feature scope)
+
+## Design Mobilization (if applicable)
+- **Tokens used**: {comma-separated token names from DESIGN.md — colors, spacing, typography, radius, shadow, motion}
+- **Components used**: {names from DESIGN.md inventory — flag any "new component required" items as a blocker that needs `/design update` before `/implement`}
+- **Surfaces touched**: {from DESIGN.md}
+- **States covered**: {which of loading / empty / error / success / offline this feature must implement}
+- **A11y notes**: {anything beyond the baseline that this feature must honor}
+
+{Remove this section entirely if the feature has no user-facing surface.}
 
 ## Test Strategy
 - **Mocking approach**: {Appropriate for the project's tech stack — detect from CLAUDE.md and existing tests}

@@ -32,6 +32,7 @@ Use your native tools to collect project state:
 Read:
 - `PRD.md` — Full product requirements (especially sections covering user stories, features, and any recommended implementation sequence)
 - `CLAUDE.md` — Tech stack, architecture, conventions (if missing, WARN: "No CLAUDE.md found. Roadmap will be based on PRD only.")
+- `DESIGN.md` — Surfaces and component inventory. Feature boundaries should align with surfaces; a feature that ships a brand-new surface or critical component should be called out (if missing, WARN: "No DESIGN.md found. Run `/design` first so the roadmap can align feature boundaries with surfaces.")
 
 ## Step 2: Decompose the PRD into features
 

@@ -10,9 +10,10 @@ allowed-tools: Bash(ls:*), Bash(git:*), Read, Grep, Glob
 Use your native tools to collect project state:
 
 1. Run `git branch --show-current` (Bash) to get the current branch
-2. Read `specs/roadmap.md` to get the roadmap (if it doesn't exist, note "__NO_ROADMAP__")
-3. Use `Glob("specs/[0-9]*/spec.md")` to find all feature tracks
-4. For each track found, read its `spec.md`, and check for `plan.md`, `tasks.md`, `review.md`
+2. Check for the foundational artifacts: `PRD.md`, `specs/constitution.md`, `DESIGN.md` — note which are present (each missing one is a possible "next action").
+3. Read `specs/roadmap.md` to get the roadmap (if it doesn't exist, note "__NO_ROADMAP__")
+4. Use `Glob("specs/[0-9]*/spec.md")` to find all feature tracks
+5. For each track found, read its `spec.md`, and check for `plan.md`, `tasks.md`, `review.md`
    - Extract the **Status** field from spec.md
    - If tasks.md exists, count `[x]` (done) and `[ ]` (pending) items, find the first pending task
 
@@ -50,10 +51,13 @@ Active: 002-auth-client
 
 ### 3. Recommended action
 
-Based on the state, suggest ONE clear next action:
+Based on the state, suggest ONE clear next action. Evaluate the rows **top to bottom and stop at the first match** — the foundational artifacts (PRD → constitution → DESIGN → roadmap) take precedence over track-level state, since the workflow can't meaningfully proceed without them.
 
 | State | Recommendation |
 |---|---|
+| No `PRD.md` | "Run `/prd` to define what you are building." |
+| `PRD.md` exists, no `specs/constitution.md` | "Run `/constitution` to set the non-negotiables." |
+| Constitution exists, no `DESIGN.md` | "Run `/design` to define the design system." |
 | No roadmap | "Run `/roadmap` to define your features." |
 | Roadmap exists, no tracks | "Run `/specify` to start the first feature." |
 | Track has draft spec | "Review and approve the spec, then `/plan {name}`." |
