@@ -11,9 +11,9 @@ The orchestrator: implements tasks in parallel waves with isolated workers, revi
 | **Usage** | `/build [quick] [--parallel=N] [--sequential] [--isolate=worktree|none] [--max-rounds=N] [feature-name]` |
 | **Reads** | `tasks.md`, `spec.md`, `plan.md`, `CLAUDE.md`, `DESIGN.md` |
 | **Writes** | code, `tasks.md` checkboxes, `review.md`, `qa-report.md` |
-| **Gates** | Stops on failed/blocked tasks, merge conflicts, out-of-scope edits, base-guard failure, stalled convergence, QA FAIL. Never ships by itself. |
+| **Gates** | Stops on failed/blocked tasks, merge conflicts, out-of-scope edits, base-guard failure, stalled convergence, QA FAIL. The ship step keeps its own commit-message confirmation; `quick` mode skips review, convergence and ship. |
 | **Next** | `/ship` |
-| **Tools** | `Bash, Read, Write, Edit, Grep, Glob, Agent` |
+| **Tools** | `Bash, Read, Write, Edit, Grep, Glob, Agent, EnterWorktree` |
 
 ## Procedure outline
 

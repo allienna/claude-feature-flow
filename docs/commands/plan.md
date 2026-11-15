@@ -13,7 +13,7 @@ Writes the technical plan: architecture decisions, affected files, phases, paral
 | **Writes** | `plan.md`; spec status → Approved |
 | **Gates** | Refuses while `[NEEDS CLARIFICATION]` markers remain or acceptance criteria are not testable. |
 | **Next** | `/tasks` |
-| **Tools** | `Bash(ls:*), Read, Write, Edit, Grep, Glob` |
+| **Tools** | `Bash(git:*), Bash(ls:*), Read, Write, Edit, Grep, Glob, EnterWorktree` |
 
 ## Procedure outline
 

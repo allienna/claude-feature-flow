@@ -13,7 +13,7 @@ Resolves ambiguities in a spec, one question at a time, and edits the spec in pl
 | **Writes** | `spec.md` |
 | **Gates** | At most five questions per run; recommended default offered for each. |
 | **Next** | `/plan` |
-| **Tools** | `Read, Edit, Grep, Glob` |
+| **Tools** | `Bash(git:*), Read, Edit, Grep, Glob, EnterWorktree` |
 
 ## Procedure outline
 

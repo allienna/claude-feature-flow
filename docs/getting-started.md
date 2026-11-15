@@ -56,7 +56,7 @@ Review the spec: user stories, acceptance criteria written as Given/When/Then sc
 /analyze        # optional read-only cross-check of PRD ↔ spec ↔ plan ↔ tasks
 ```
 
-**4. Build** — the orchestrator implements the tasks wave by wave, reviews, fixes gaps, runs QA, and stops before shipping:
+**4. Build** — the orchestrator implements the tasks wave by wave, reviews, fixes gaps, runs QA, then hands over to `/ship`, which asks you to confirm the commit message before anything is pushed (`/build quick` stops after QA):
 
 ```
 /build

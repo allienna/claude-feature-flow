@@ -12,7 +12,7 @@ Run a project-wide health check: tests, linting, type checking, security scannin
 
 ## Step 1 — Delegate the checks
 
-The checks produce large outputs (test logs, lint dumps) that do not belong in your context. Launch ONE `qa-verifier` agent (`claude-feature-flow:qa-verifier` when installed as a plugin, `qa-verifier` with the symlink install; otherwise a `general-purpose` agent given `agents/qa-verifier.md` as its role) with `mode` = `full` or `quick`. It detects the stack, discovers the build commands from `CLAUDE.md`, runs the automated checks, the coverage gap audit and (full mode) the security scan, spec compliance and dependency checks, then returns one fenced `json` block.
+The checks produce large outputs (test logs, lint dumps) that do not belong in your context. Launch ONE `qa-verifier` agent (`claude-feature-flow:qa-verifier` when installed as a plugin, `qa-verifier` with the symlink install; otherwise a `general-purpose` agent given `${CLAUDE_PLUGIN_ROOT}/agents/qa-verifier.md` (or `.claude/agents/qa-verifier.md`) as its role) with `mode` = `full` or `quick`. It detects the stack, discovers the build commands from `CLAUDE.md`, runs the automated checks, the coverage gap audit and (full mode) the security scan, spec compliance and dependency checks, then returns one fenced `json` block.
 
 - Returns `{"verdict": "NO_SOURCE"}` → "No source code to audit yet. Build some features first." STOP.
 - No valid `json` block → relaunch once; if it still fails, report "QA verifier returned no valid result" and STOP (do not invent results).

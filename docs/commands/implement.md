@@ -13,7 +13,7 @@ Implements the next pending task in your own context (manual mode).
 | **Writes** | code; ticks the task in `tasks.md` |
 | **Gates** | Stops if a design component is missing from the inventory; honors the task's `Files` scope; one task per call. |
 | **Next** | `/implement` again, then `/review` |
-| **Tools** | `Bash, Read, Write, Edit, Grep, Glob` |
+| **Tools** | `Bash, Read, Write, Edit, Grep, Glob, EnterWorktree` |
 
 ## Procedure outline
 

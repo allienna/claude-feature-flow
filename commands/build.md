@@ -1,7 +1,7 @@
 ---
 description: "Orchestrated pipeline: implement tasks in parallel waves → review → converge → qa → ship. Use /build quick to skip review and ship."
 argument-hint: "[quick] [--parallel=N] [--sequential] [--isolate=worktree|none] [--max-rounds=N] [feature-name]"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent, EnterWorktree
 ---
 
 # Build — Orchestrated Feature Pipeline
@@ -30,11 +30,13 @@ tasks.md ──► waves ──► [fan-out: implementer × N] ──barrier─�
 - `--max-rounds=N` → max convergence rounds (default **2**)
 - `--isolate=worktree|none` → how parallel workers are isolated (default **`worktree`** for waves of 2+ tasks; a single-task wave always runs in place). `none` = shared working tree, protected only by disjoint `Files` and a `git status` scope check — use it when per-worktree setup is too heavy or tests share a fixed port/database
 
-**Agents**: `implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`. Installed as a plugin their `subagent_type` is `claude-feature-flow:{name}`; installed with `install.sh` it is `{name}`. If a type is not available, launch a `general-purpose` agent and give it the content of the matching `agents/{name}.md` as its role and output contract.
+**Agents**: `implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`. Installed as a plugin their `subagent_type` is `claude-feature-flow:{name}`; installed with `install.sh` it is `{name}`. If a type is not available, launch a `general-purpose` agent and give it the content of the matching agent file as its role and output contract (`${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` when installed as a plugin, `.claude/agents/{name}.md` with `install.sh`).
 
 ---
 
 ## Step 0: Detect state
+
+**Locate the track first.** Features in progress live in their own git worktrees (`.claude/worktrees/{NNN}-{name}`), so `specs/{NNN}-{name}/` may not exist in your current directory. If a feature name is given and its `spec.md` is not found here, run `git worktree list --porcelain` and look in each worktree. If it is found in another worktree, switch to it with the `EnterWorktree` tool (`path` = that worktree) and continue from there; if it exists nowhere, use the usual "run `/specify`" message. With no feature name, consider the tracks of all worktrees and prefer the one in your current worktree.
 
 1. `Glob("specs/[0-9]*/spec.md")` to find all feature tracks
 2. For each track, read its `spec.md` and check for `plan.md`, `tasks.md`, `review.md`
@@ -65,8 +67,10 @@ Read `CLAUDE.md` and extract test, lint, format, and type check commands. If `CL
 ### Preflight (git)
 
 - **Branch**: `git branch --show-current` must equal the spec's **Branch** (`feat/{NNN}-{feature}`). If you are on `main` or another branch → STOP: "Not on the feature branch. Enter the feature worktree (`.claude/worktrees/{NNN}-{feature}`) or `git switch feat/{NNN}-{feature}`."
-- **Dependencies**: every feature listed in the spec's **Depends on** must be merged into `main` (`git branch --merged main` / its spec is `Complete` on `main`). If not → STOP: "Feature {dep} is not merged yet — `/build` needs its code. Specs, plans and tasks can proceed in parallel; the build cannot."
+- **Dependencies**: every feature listed in the spec's **Depends on** must be merged into `main`: its `specs/{NNN}-{dep}/spec.md` exists on `main` with Status `Complete` (`git show main:specs/{NNN}-{dep}/spec.md`; branch-merged checks miss squash merges). If not → STOP: "Feature {dep} is not merged yet — `/build` needs its code. Specs, plans and tasks can proceed in parallel; the build cannot."
 - **Worktree isolation** (`--isolate=worktree`): needs a git repo with at least one commit, and Claude Code's `worktree.baseRef` set to `"head"` so worker worktrees start from this branch instead of the default branch. This is verified automatically on the first parallel wave (see 1b); you do not need to check the setting yourself.
+
+- **Up to date with `main`**: `git merge-base --is-ancestor main HEAD` must succeed, so the dependencies' code is actually in this branch. If not → STOP: "This branch is behind `main`. Update it (`git merge main`) and re-run `/build`."
 
 Print: "**Build mode**: {full | quick} · parallel={N} · isolate={worktree|none} · max-rounds={R}" and proceed.
 
@@ -93,7 +97,7 @@ Let `ISOLATE` = `worktree` if `--isolate=worktree` (default) **and** the batch h
 1. **Select** the ready tasks of the wave, at most `--parallel` at a time (extra tasks form follow-up batches of the same wave).
 2. **Prompt each worker** with only what it needs: the task block verbatim (`id`, title, **Do**, **Test**, **Files**, **Covers**); paths to `spec.md`, `plan.md`, `CLAUDE.md`, and `DESIGN.md` when the plan has a "Design Mobilization" section; the discovered build commands; the **Worktree Setup** commands from `CLAUDE.md` (worktree mode only); `mode: worktree|none`; for a retry, the previous report's `blockers`. Do NOT paste source code into the prompt and do NOT read source files yourself.
 3. **Barrier**: continue only when every worker of the batch has returned. Never read a worker's partial output.
-4. **Fan-in — parse** each worker's final fenced `json` block (contract: `schemas/implementer.schema.json`). Valid when it has `task_id`, `status`, `files_changed`, `tests_passed` (and, in worktree mode, `base_sha`, `head_sha`, `branch`). A missing or malformed block → the task is `failed` with blocker "no valid report".
+4. **Fan-in — parse** each worker's final fenced `json` block (contract: `${CLAUDE_PLUGIN_ROOT}/schemas/implementer.schema.json`, summarized in `agents/implementer.md`). Valid when it has `task_id`, `status`, `files_changed`, `tests_passed` (and, in worktree mode, `base_sha`, `head_sha`, `branch`). A missing or malformed block → the task is `failed` with blocker "no valid report".
 5. **Wave checks** (once, by you, after integration): run the discovered test, lint, format and type check commands over the project. On failure, identify the offending task(s) from the output, relaunch **one** `implementer` (in place) with the failure as `blockers_from_previous_attempt`, and re-run the checks.
 6. **Report**: one line per task — `T-X.Y — {title} — {done|failed|blocked}` — and `({done}/{total})`.
 7. **Retry once**: a `failed` task is relaunched one time with its blockers (fresh worktree if in worktree mode). A task still failed, or `blocked` (needs a file outside its scope, missing design component, …), triggers the gate below.
@@ -110,7 +114,7 @@ Let `ISOLATE` = `worktree` if `--isolate=worktree` (default) **and** the batch h
 1. **Baseline**: the worktrees start from this branch's `HEAD`, so `HEAD` must contain everything done so far. If `git status --porcelain` is not empty: stage and commit **only** `specs/{NNN}-{feature}/` and the files declared in `Files` of already-checked tasks as `chore(build): wave {n} baseline`. Any other dirty path → STOP: "Uncommitted changes outside this track: {paths}. Commit or stash them, or use `--isolate=none`." Record `BASE=$(git rev-parse HEAD)`. (These checkpoint commits disappear in the squash merge of the PR.)
 2. **Fan-out**: launch ALL workers **in a single message**, one `implementer` Agent call per task, each with `isolation: "worktree"`. Each worker works only in its own worktree, runs the Worktree Setup commands, implements its task, runs the task's **Test**, and **commits once** on its own branch.
 3. **Barrier**, then for each worker read from the Agent result its `<worktree>` block (`worktreePath`, `worktreeBranch`) and from its JSON report `base_sha`, `head_sha`:
-   - **Base guard**: `base_sha` must equal `BASE`. If not → STOP with: "Worker worktrees did not start from this branch (they started from {base_sha}, expected {BASE}). Set `worktree.baseRef` to `"head"` in your Claude Code settings (see docs/guides/troubleshooting.md), or re-run with `--isolate=none`." Do not merge anything.
+   - **Base guard**: read the real base from git, not from the report: `git merge-base {branch} BASE` must equal `BASE` (the report's `base_sha` is informational). If not → STOP with: "Worker worktrees did not start from this branch (they started from {git merge-base {branch} BASE}, expected {BASE}). Set `worktree.baseRef` to `"head"` in your Claude Code settings (see docs/guides/troubleshooting.md), or re-run with `--isolate=none`." Do not merge anything.
    - **Scope check**: `git diff --name-only BASE..{branch}` must be a subset of that task's `Files`. Otherwise the task is `failed` (blocker "out-of-scope edit: {paths}") and its branch is not merged.
 4. **Fan-in — merge** the accepted branches one at a time, in task-id order: `git merge --no-ff --no-edit {branch}`.
    - Conflict → `git merge --abort`; the task stays unchecked and is re-run **alone** in the next batch (it will then start from the merged `HEAD`). Print: "Merge conflict between {task} and earlier tasks of the wave: their `Files` overlap in practice. Fix `Files`/`Depends-on` in tasks.md." A conflict means the declared `Files` were wrong, not that the worker is at fault.

@@ -1,9 +1,7 @@
 {
   "title": "qa-verifier report",
   "type": "object",
-  "required": [
-    "mode"
-  ],
+  "required": [],
   "properties": {
     "mode": {
       "enum": [
@@ -78,20 +76,22 @@
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "if": {
-    "properties": {
-      "verdict": {
-        "const": "NO_SOURCE"
+  "oneOf": [
+    {
+      "required": [
+        "verdict"
+      ],
+      "properties": {
+        "verdict": {
+          "const": "NO_SOURCE"
+        }
       }
     },
-    "required": [
-      "verdict"
-    ]
-  },
-  "else": {
-    "required": [
-      "mode",
-      "categories"
-    ]
-  }
+    {
+      "required": [
+        "mode",
+        "categories"
+      ]
+    }
+  ]
 }

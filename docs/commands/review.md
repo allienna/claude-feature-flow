@@ -13,7 +13,7 @@ Independent review by `spec-reviewer` and `quality-reviewer` in parallel, merged
 | **Writes** | `review.md`; spec status → Complete if OK |
 | **Gates** | Verdict: Ready to merge / Pass with notes / Needs work. On Needs work it can append corrective tasks. |
 | **Next** | `/qa` then `/ship` |
-| **Tools** | `Bash, Read, Write, Edit, Grep, Glob, Agent` |
+| **Tools** | `Bash, Read, Write, Edit, Grep, Glob, Agent, EnterWorktree` |
 
 ## Procedure outline
 

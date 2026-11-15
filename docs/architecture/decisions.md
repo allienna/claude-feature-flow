@@ -22,7 +22,7 @@ Short records of the decisions behind 2.0.
 
 ## ADR-005: Worktrees at two levels, `baseRef: head` guarded by `base_sha`
 **Decision.** One worktree per feature; one per worker in waves of 2+ tasks. Worker worktrees must start from the feature branch; each report's `base_sha` is checked against the baseline `HEAD` instead of trusting configuration.
-**Why.** Claude Code starts subagent worktrees from the default branch by default (verified in a spike: a worktree started from the default branch's commit and did not contain uncommitted work). Disjoint `Files` do not stop test pollution between concurrent workers.
+**Why.** Claude Code starts subagent worktrees from the default branch by default (verified in a spike with default settings: with the feature branch two commits ahead of the default branch, a subagent worktree started from the default branch's commit and contained none of the branch's work. A plugin cannot ship the `worktree.baseRef` setting, so the user sets it and `/build` verifies it). Disjoint `Files` do not stop test pollution between concurrent workers.
 **Consequence.** Baseline commits before each parallel wave (squashed away at merge); a one-time `worktree.baseRef` setting; per-worktree dependency setup.
 
 ## ADR-006: Markdown orchestrator first, workflow script later

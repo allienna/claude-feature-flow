@@ -28,7 +28,7 @@ Every arrow is a **human decision**: you run the next command when you are satis
 | Plan | `/plan` | `plan.md` | You review the architecture |
 | Break down | `/tasks` | `tasks.md` (with waves) | You review tasks and coverage |
 | Verify artifacts | `/analyze` | a printed report | You decide what to fix |
-| Build | `/build` or `/implement` | code, `review.md`, `qa-report.md` | Stops on failure; never ships by itself |
+| Build | `/build` or `/implement` | code, `review.md`, `qa-report.md` | Stops on any failure; full mode ends in `/ship`, which asks you to confirm the commit message |
 | Review | `/review` | `review.md` | Verdict is mechanical; you read it |
 | Audit | `/qa` | `qa-report.md` | You read it |
 | Ship | `/ship` | commit, push, PR | You confirm the commit message |

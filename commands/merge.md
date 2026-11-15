@@ -72,7 +72,7 @@ Do **not** pass `--delete-branch` when the PR branch is checked out in a worktre
 
 ## 4. Local update and cleanup
 
-1. If the current session is inside the feature worktree (`.claude/worktrees/...`), leave it with the `ExitWorktree` tool so you are in the main checkout. If the feature has no worktree (a branch created by plugin 1.x), skip the worktree commands below and just delete the merged branch.
+1. If the current session is inside the feature worktree (`.claude/worktrees/...`), leave it with the `ExitWorktree` tool using `action: "keep"` (never `remove`: the worktree was created by `/specify`, you remove it explicitly below). If `ExitWorktree` reports nothing to exit (the session was started directly inside the worktree), run the git commands below against the main checkout with `git -C {MAIN_ROOT}` (the first path of `git worktree list`), and tell the user to leave the worktree directory (or restart the session in the main checkout) before the removal can succeed. If the feature has no worktree (a branch created by plugin 1.x), skip the worktree commands below and just delete the merged branch.
 2. Update main and remove the feature's worktree and branches:
 
 ```bash

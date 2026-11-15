@@ -13,7 +13,7 @@ Read-only consistency check across PRD, constitution, spec, plan, tasks and `DES
 | **Writes** | nothing (prints a report) |
 | **Gates** | None; it only reports. |
 | **Next** | the command its recommendation names |
-| **Tools** | `Read, Grep, Glob, Agent` |
+| **Tools** | `Bash(git:*), Read, Grep, Glob, Agent, EnterWorktree` |
 
 ## Procedure outline
 

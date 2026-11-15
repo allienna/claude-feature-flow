@@ -1,12 +1,14 @@
 ---
 description: Review a completed feature against its spec. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent, EnterWorktree
 ---
 
 # Review
 
 ## Step 0: Detect current state
+
+**Locate the track first.** Features in progress live in their own git worktrees (`.claude/worktrees/{NNN}-{name}`), so `specs/{NNN}-{name}/` may not exist in your current directory. If a feature name is given and its `spec.md` is not found here, run `git worktree list --porcelain` and look in each worktree. If it is found in another worktree, switch to it with the `EnterWorktree` tool (`path` = that worktree) and continue from there; if it exists nowhere, use the usual "run `/specify`" message. With no feature name, consider the tracks of all worktrees and prefer the one in your current worktree.
 
 Use your native tools to collect project state:
 
@@ -52,7 +54,7 @@ The reviewers must not be the agent that wrote the code. Launch **both in a sing
 1. `spec-reviewer` — spec/plan/constitution/DESIGN.md compliance, acceptance criteria with evidence.
 2. `quality-reviewer` — build commands and code quality of the feature's diff.
 
-(Plugin install: `subagent_type` is `claude-feature-flow:spec-reviewer` / `claude-feature-flow:quality-reviewer`; symlink install: bare names; if unavailable, use `general-purpose` with the matching `agents/*.md` as its role.)
+(Plugin install: `subagent_type` is `claude-feature-flow:spec-reviewer` / `claude-feature-flow:quality-reviewer`; symlink install: bare names; if unavailable, use `general-purpose` with the matching agent file as its role: `${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` as a plugin, `.claude/agents/{name}.md` with `install.sh`.)
 
 Give each only: the artifact paths from Step 1, the build commands, and the base branch to diff against (`git merge-base HEAD main`). Wait for both (barrier). Each ends with one fenced `json` block; if a block is missing or malformed, relaunch that reviewer once, then record the review as `WARN: reviewer returned no valid report` instead of guessing.
 

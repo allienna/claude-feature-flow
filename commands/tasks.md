@@ -1,12 +1,14 @@
 ---
 description: Break a plan into atomic tasks. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash(ls:*), Read, Write, Edit, Grep, Glob
+allowed-tools: Bash(git:*), Bash(ls:*), Read, Write, Edit, Grep, Glob, EnterWorktree
 ---
 
 # Tasks
 
 ## Step 0: Detect current state
+
+**Locate the track first.** Features in progress live in their own git worktrees (`.claude/worktrees/{NNN}-{name}`), so `specs/{NNN}-{name}/` may not exist in your current directory. If a feature name is given and its `spec.md` is not found here, run `git worktree list --porcelain` and look in each worktree. If it is found in another worktree, switch to it with the `EnterWorktree` tool (`path` = that worktree) and continue from there; if it exists nowhere, use the usual "run `/specify`" message. With no feature name, consider the tracks of all worktrees and prefer the one in your current worktree.
 
 Use your native tools to collect project state:
 

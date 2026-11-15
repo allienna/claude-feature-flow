@@ -13,7 +13,7 @@ Breaks the plan into atomic tasks with dependencies, write scopes and AC coverag
 | **Writes** | `tasks.md`; spec status → In Progress |
 | **Gates** | Every acceptance criterion must be covered by a task; dependency cycles are errors; asks before overwriting existing tasks. |
 | **Next** | `/analyze` (optional), then `/build` or `/implement` |
-| **Tools** | `Bash(ls:*), Read, Write, Edit, Grep, Glob` |
+| **Tools** | `Bash(git:*), Bash(ls:*), Read, Write, Edit, Grep, Glob, EnterWorktree` |
 
 ## Procedure outline
 

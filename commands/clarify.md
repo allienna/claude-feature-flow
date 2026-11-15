@@ -1,7 +1,7 @@
 ---
 description: Resolve ambiguities in a feature spec before planning. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Read, Edit, Grep, Glob
+allowed-tools: Bash(git:*), Read, Edit, Grep, Glob, EnterWorktree
 ---
 
 # Clarify
@@ -9,6 +9,8 @@ allowed-tools: Read, Edit, Grep, Glob
 Close the gaps in a spec **before** `/plan` builds on them. Every unresolved ambiguity becomes a wrong architecture decision later, which is much more expensive to fix. This command only edits `spec.md` — it never plans or implements.
 
 ## Step 0: Detect current state
+
+**Locate the track first.** Features in progress live in their own git worktrees (`.claude/worktrees/{NNN}-{name}`), so `specs/{NNN}-{name}/` may not exist in your current directory. If a feature name is given and its `spec.md` is not found here, run `git worktree list --porcelain` and look in each worktree. If it is found in another worktree, switch to it with the `EnterWorktree` tool (`path` = that worktree) and continue from there; if it exists nowhere, use the usual "run `/specify`" message. With no feature name, consider the tracks of all worktrees and prefer the one in your current worktree.
 
 1. `Glob("specs/[0-9]*/spec.md")` to find all feature tracks
 2. For each, read the **Status** and check for `plan.md`

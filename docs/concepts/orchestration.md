@@ -14,7 +14,7 @@ flowchart TD
     RV --> M[merge reports → review.md]
     M -->|Needs work, rounds left, progress| CT[corrective tasks T-Cn.k] --> W
     M -->|OK| QA[qa-verifier → qa-report.md]
-    QA --> GATE[stop: you run /ship]
+    QA --> SHIP[/ship: you confirm the commit message]
 ```
 
 ## Vocabulary
@@ -72,7 +72,7 @@ The loop stops when the verdict clears, when `--max-rounds` is reached, or when 
 
 ## Human gates preserved
 
-The orchestrator never skips: spec approval (before `/plan`), plan review (before `/tasks`), the commit-message confirmation in `/ship`, and the squash-message confirmation in `/merge`. `/build` stops after QA in quick mode and hands over to `/ship` in full mode.
+The orchestrator never skips: spec approval (before `/plan`), plan review (before `/tasks`), the commit-message confirmation in `/ship`, and the squash-message confirmation in `/merge`. `/build quick` stops after QA; the full mode ends by invoking `/ship`, which keeps its own confirmation.
 
 ## Why not a script?
 
