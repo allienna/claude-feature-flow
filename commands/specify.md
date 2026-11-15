@@ -1,7 +1,7 @@
 ---
 description: Create a feature specification. Auto-detects the next feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash(mkdir:*), Bash(ls:*), Bash(git:*), Read, Write, Edit, Grep, Glob
+allowed-tools: Bash(mkdir:*), Bash(ls:*), Bash(git:*), Read, Write, Edit, Grep, Glob, EnterWorktree
 ---
 
 # Specify
@@ -11,7 +11,7 @@ allowed-tools: Bash(mkdir:*), Bash(ls:*), Bash(git:*), Read, Write, Edit, Grep, 
 Use your native tools to collect project state:
 
 1. Read `specs/roadmap.md` (if it doesn't exist, note "__NO_ROADMAP__")
-2. Use `Glob("specs/[0-9]*/spec.md")` to find all feature tracks
+2. **Discover tracks in every checkout**: features in progress live in their own worktrees, so a track may not exist in your current directory. Run `git worktree list --porcelain` and `Glob("specs/[0-9]*/spec.md")` in the main checkout **and** in each listed worktree path. A feature "has a track" if any checkout has it.
 3. For each track found, read its `spec.md` and check for `plan.md`, `tasks.md`, `review.md`
    - Extract the **Status** field from spec.md
 
@@ -50,13 +50,23 @@ Read:
 
 ## Step 2: Check dependencies
 
-From roadmap, verify each dependency has a track with status "In Progress" or "Complete".
-Warn if unmet, but allow override.
+From roadmap, verify each dependency has a track (in any checkout) with status "In Progress" or "Complete".
+Warn if unmet, but allow override. Also note which dependencies are **not yet merged into `main`**: specifying, planning and tasking can proceed in parallel, but `/build` will refuse to start until they are merged.
 
-## Step 3: Create the feature track
+## Step 3: Create the feature worktree and track
 
-Determine next feature number. Create `specs/{NNN}-$ARGUMENTS/`.
-Create and switch to branch `feat/{NNN}-$ARGUMENTS`.
+**Number**: `{NNN}` is the numeric part of the roadmap id (`F-003` → `003`), never "the next free number" — parallel worktrees would collide. A feature with no roadmap entry gets the next number free across all checkouts and `feat/*` branches.
+
+**Isolation**: each feature lives in its own git worktree, so several features can be specified, planned and built at the same time in separate sessions without touching each other's files.
+
+1. **Foundations must be committed.** A new worktree starts from `main`, so `PRD.md`, `CLAUDE.md`, `DESIGN.md`, `specs/constitution.md` and `specs/roadmap.md` must be committed there. Run `git status --porcelain -- PRD.md CLAUDE.md DESIGN.md specs/` in the main checkout: if any of those is untracked or modified → STOP: "Commit the foundation artifacts to main first (suggested: `docs: add project foundations`)." and offer to do it (ask before committing).
+2. **Create the worktree** from the main checkout root (use `git rev-parse --git-common-dir` to find it if you are already inside another worktree):
+   `git worktree add .claude/worktrees/{NNN}-$ARGUMENTS -b feat/{NNN}-$ARGUMENTS main`
+   If that worktree already exists, reuse it. If `.claude/worktrees/` is not git-ignored (`git check-ignore .claude/worktrees`), propose adding it to `.gitignore`.
+3. **Enter it** with the `EnterWorktree` tool, using the path `.claude/worktrees/{NNN}-$ARGUMENTS`. All following steps, and every later command for this feature (`/clarify`, `/plan`, `/tasks`, `/build`, `/ship`), run **inside** this worktree.
+4. Create `specs/{NNN}-$ARGUMENTS/` inside the worktree.
+
+**Fallback**: not in a git repository, or no commit yet → skip the worktree, create the directory only, and WARN: "No git worktree isolation: initialize git and make a first commit to enable parallel features."
 
 ## Step 4: Write spec.md
 
@@ -70,6 +80,7 @@ Create `specs/{NNN}-$ARGUMENTS/spec.md`:
 **Status**: Draft
 **Created**: {today's date}
 **Branch**: feat/{NNN}-{feature-name}
+**Worktree**: .claude/worktrees/{NNN}-{feature-name}
 **PRD sections**: {from roadmap}
 **Depends on**: {from roadmap, with status of each dependency}
 
@@ -97,23 +108,27 @@ Why are we building this? What problem does it solve?
 {How errors should be handled — reference the PRD's error handling section if it exists}
 
 ## Acceptance Criteria
-- [ ] AC-1: {Testable criterion}
+Each criterion is an executable scenario (Given/When/Then, or EARS: "When <trigger>, the system shall <response>"). It must be falsifiable by a test: observable inputs, observable outputs, no vague adjectives ("fast", "user-friendly", "robust").
+- [ ] AC-1 (FR-1): **Given** {precondition} **When** {action} **Then** {observable outcome}
+- [ ] AC-2 (FR-1, error): **Given** {precondition} **When** {invalid action} **Then** {specific error behavior}
+
+Cover the happy path AND every scenario listed under "Error Scenarios". Every AC references the FR it verifies. `/tasks` links tasks to ACs and `/review` verifies each one.
 
 ## Out of Scope
 - {Explicit exclusions}
 
 ## Open Questions
-- {Unresolved items needing human decision}
+- [NEEDS CLARIFICATION: {question}] {Unresolved items needing a human decision. Never guess: mark the gap with this exact marker, in the section where the answer will land (a requirement, an AC, an error scenario) and list it here. `/clarify` resolves them; `/plan` refuses to run while any marker remains.}
 ```
 
-## Step 5: Update roadmap status
+## Step 5: Roadmap status
 
-In `specs/roadmap.md`, update this feature's status from "Not started" to "Specifying".
+Do **not** edit `specs/roadmap.md`. Feature statuses are derived from the tracks (`/status` does this), and several features developing in parallel would otherwise all edit the same lines and conflict at merge time. `Not started` in the roadmap file only means "no track yet".
 
 ## Step 6: Present for review
 
 1. User stories (one line each)
 2. Acceptance criteria
-3. Open questions requiring input
+3. Open questions requiring input (count of `[NEEDS CLARIFICATION]` markers)
 4. Dependencies and their status
-5. **"Review this spec. Once approved, run `/plan $ARGUMENTS`."**
+5. **If markers remain: "Run `/clarify $ARGUMENTS` to resolve them." Otherwise: "Review this spec. Once approved, run `/plan $ARGUMENTS`."** (Running `/clarify` is also worthwhile when the spec looks ambiguous even without markers.)

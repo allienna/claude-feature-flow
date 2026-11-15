@@ -1,132 +1,25 @@
 ---
 description: Run project-wide quality audit
 argument-hint: "[quick]"
-allowed-tools: Bash, Read, Write, Grep, Glob
+allowed-tools: Bash, Read, Write, Grep, Glob, Agent
 ---
 
 # QA — Quality Audit
 
 Run a project-wide health check: tests, linting, type checking, security scanning, and spec compliance.
 
-**Modes**: `/qa` = full audit (steps 0-6), `/qa quick` = steps 0-2 only
+**Modes**: `/qa` = full audit, `/qa quick` = automated checks + coverage gap audit only
 
-## Step 0 — Detect Environment
+## Step 1 — Delegate the checks
 
-### Discover project structure
+The checks produce large outputs (test logs, lint dumps) that do not belong in your context. Launch ONE `qa-verifier` agent (`feature-flow:qa-verifier` when installed as a plugin, `qa-verifier` with the symlink install; otherwise a `general-purpose` agent given `${CLAUDE_PLUGIN_ROOT}/agents/qa-verifier.md` (or `.claude/agents/qa-verifier.md`) as its role) with `mode` = `full` or `quick`. It detects the stack, discovers the build commands from `CLAUDE.md`, runs the automated checks, the coverage gap audit and (full mode) the security scan, spec compliance and dependency checks, then returns one fenced `json` block.
 
-1. Look for config files to identify the tech stack:
-   - `pyproject.toml`, `setup.py`, `setup.cfg` → Python
-   - `package.json` → JavaScript/TypeScript
-   - `go.mod` → Go
-   - `Cargo.toml` → Rust
-   - `pom.xml`, `build.gradle` → Java
-   - Other config files as applicable
+- Returns `{"verdict": "NO_SOURCE"}` → "No source code to audit yet. Build some features first." STOP.
+- No valid `json` block → relaunch once; if it still fails, report "QA verifier returned no valid result" and STOP (do not invent results).
 
-2. Discover source and test directories using Glob:
-   - Try `src/**/*`, `lib/**/*`, `app/**/*`, `pkg/**/*` or identify from config files
-   - Try `tests/**/*`, `test/**/*`, `__tests__/**/*`, `spec/**/*`
+## Step 2 — Generate QA Report
 
-3. Assign the discovered paths to variables for later steps:
-   - Set `source_dir` to the primary source directory you identified (e.g., `src` or `lib`)
-   - Set `test_dir` to the primary test directory you identified (e.g., `tests` or `__tests__`)
-
-4. If no source files exist in `source_dir`: "No source code to audit yet. Build some features first." STOP.
-
-### Discover build commands
-
-Read `CLAUDE.md` and extract:
-- **Test command**: (e.g., `pytest`, `jest`, `go test`, `cargo test`)
-- **Lint command**: (e.g., `ruff check`, `eslint`, `golangci-lint`)
-- **Format command**: (e.g., `ruff format`, `prettier`, `gofmt`)
-- **Type check command**: (e.g., `pyright`, `tsc --noEmit`, `mypy`)
-
-If `CLAUDE.md` is missing: WARN "No CLAUDE.md found — cannot discover build commands. Add a CLAUDE.md with a '## Build & Run Commands' section. Skipping automated checks."
-
-If `CLAUDE.md` exists but doesn't define some commands: WARN for each missing command and skip that check.
-
-## Step 1 — Automated Quality Checks
-
-Run each discovered command in sequence. Record results for each:
-
-- **Lint**: Run lint command → record issues count
-- **Format**: Run format check command → record violations count
-- **Type check**: Run type check command → record errors count
-- **Test**: Run test command → record pass/fail count
-
-Skip any check whose command was not discovered, and note it as SKIP.
-
-## Step 2 — Test Coverage Gap Audit
-
-Identify untested areas:
-
-**Source modules**: Use Glob to list all source files in the discovered source directory. Check which have corresponding test files in the test directory.
-
-Produce a dynamically generated coverage gap table:
-
-```
-| Module | Has Tests | Notes |
-|--------|-----------|-------|
-| {source_file_1} | Yes/No | ... |
-| {source_file_2} | Yes/No | ... |
-```
-
-**If `/qa quick` was invoked, STOP HERE. Skip steps 3-5 and jump to step 6.**
-
-## Step 3 — Security Scan
-
-Run grep-based checks. Each check is PASS or FAIL:
-
-### 3.1 No Hardcoded Secrets
-Search for potential API keys, tokens, or passwords in source files:
-
-```
-Grep("(api_key|api_token|password|secret|bearer|private_key)\s*=\s*['\"]", path="{source_dir}")
-```
-
-PASS if no matches (or only references to env vars). FAIL if hardcoded values found.
-
-### 3.2 .env.example Validation
-Find the config/settings file(s) by searching for env var references:
-
-```
-Grep("os.environ|os.getenv|env\\(|process\\.env|std::env|viper\\.", path="{source_dir}")
-```
-
-Cross-reference discovered env vars with `.env.example` (if it exists). PASS if all vars documented. WARN if `.env.example` is missing.
-
-### 3.3 No Sensitive Data in Responses
-Search for env var names (discovered in 3.2) appearing in response/output code. PASS if no matches. FAIL if credentials referenced in response code.
-
-## Step 4 — Spec Compliance Checks
-
-### 4.1 Constitution compliance
-If `specs/constitution.md` exists, check each principle against the codebase.
-If it doesn't exist: WARN "No constitution found — run `/constitution` to create one. Skipping compliance checks."
-
-### 4.2 Feature spec compliance
-If feature specs exist (`specs/*/spec.md`), verify acceptance criteria are met for completed features.
-If no specs exist: SKIP this check.
-
-### 4.3 Codebase patterns
-If `CLAUDE.md` defines key patterns or architectural conventions, verify adherence across the codebase.
-If not defined: SKIP this check.
-
-## Step 5 — Dependency Discipline
-
-Check dependency count based on the detected package manager:
-
-```bash
-# Python: pip list | wc -l
-# Node: npm ls --depth=0 | wc -l
-# Go: go list -m all | wc -l
-# Rust: cargo tree --depth 1 | wc -l
-```
-
-Report count. WARN if it seems unusually high for the project scope.
-
-## Step 6 — Generate QA Report
-
-Write `qa-report.md` in the **project root** with this structure:
+Using the verifier's `categories`, `coverage_gaps` and `recommendations`, you write `qa-report.md` in the **project root** with this structure:
 
 ```markdown
 # QA Report

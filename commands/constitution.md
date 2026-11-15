@@ -110,6 +110,14 @@ Note: Read the project name from PRD.md or CLAUDE.md. If neither provides a clea
 2. Highlight any principles that were judgment calls (not explicitly in the PRD)
 3. Ask: **"Review this constitution. Once approved, it will be referenced by `/review` and `/qa` to check compliance."**
 
+## Step 6: Portable agent context (`AGENTS.md`)
+
+Once the constitution is approved, make the project context readable by any coding agent, not only Claude Code:
+
+1. If `AGENTS.md` does not exist: propose creating it (short, under ~60 lines): project one-liner, **Build & Run Commands** (test, lint, format, type check — copied from `CLAUDE.md`), key conventions, and a pointer "Non-negotiable principles: `specs/constitution.md`. Spec workflow artifacts: `specs/`, `PRD.md`, `DESIGN.md`." Write it only after the user agrees.
+2. If both `AGENTS.md` and `CLAUDE.md` exist: do not duplicate content. Keep one source of truth — suggest `CLAUDE.md` importing it (`@AGENTS.md`) or the reverse, and flag any divergence in the build commands.
+3. If `CLAUDE.md` lacks a `## Build & Run Commands` section, say so: the whole pipeline (`/build`, `/review`, `/qa`) relies on it.
+
 ## What NOT to include
 - Implementation details (those go in feature specs)
 - Anything that changes per feature

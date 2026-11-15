@@ -1,7 +1,7 @@
 ---
 description: Address PR comments, squash merge, and update local main
 argument-hint: "<pr-number>"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob, ExitWorktree
 ---
 
 # /merge — PR comment resolution, squash merge
@@ -65,14 +65,25 @@ Prepare a squash commit message:
 
 Once validated:
 ```bash
-gh pr merge $ARGUMENTS --squash --delete-branch --subject "{TITLE}" --body "{BODY}"
+gh pr merge $ARGUMENTS --squash --subject "{TITLE}" --body "{BODY}"
 ```
 
-## 4. Local update
+Do **not** pass `--delete-branch` when the PR branch is checked out in a worktree: `gh` would try to switch the local checkout and fail. Branch and worktree cleanup is done explicitly in step 4.
+
+## 4. Local update and cleanup
+
+1. If the current session is inside the feature worktree (`.claude/worktrees/...`), leave it with the `ExitWorktree` tool using `action: "keep"` (never `remove`: the worktree was created by `/specify`, you remove it explicitly below). If `ExitWorktree` reports nothing to exit (the session was started directly inside the worktree), run the git commands below against the main checkout with `git -C {MAIN_ROOT}` (the first path of `git worktree list`), and tell the user to leave the worktree directory (or restart the session in the main checkout) before the removal can succeed. If the feature has no worktree (a branch created by plugin 1.x), skip the worktree commands below and just delete the merged branch.
+2. Update main and remove the feature's worktree and branches:
 
 ```bash
 git checkout main
 git pull
+git worktree remove .claude/worktrees/{NNN}-{feature}     # refuses if there is uncommitted work: show it and ask
+git branch -D feat/{NNN}-{feature}
+git push origin --delete feat/{NNN}-{feature}             # ignore "remote ref does not exist" (auto-delete on merge)
+git worktree prune
 ```
 
-Confirm the merge is done and main is up to date.
+Never use `--force` on `git worktree remove` without showing the user what would be lost.
+
+Confirm the merge is done, main is up to date and no stale worktree remains (`git worktree list`).

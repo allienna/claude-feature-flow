@@ -84,7 +84,7 @@ jobs:
 
           tmp="$(mktemp)"
           jq --arg v "$new" '.version = $v' .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
-          jq --arg v "$new" '.plugins |= map(if .name == "claude-feature-flow" then .version = $v else . end)' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
+          jq --arg v "$new" '.plugins |= map(if .name == "feature-flow" then .version = $v else . end)' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

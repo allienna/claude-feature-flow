@@ -1,0 +1,97 @@
+{
+  "title": "qa-verifier report",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "mode": {
+      "enum": [
+        "full",
+        "quick"
+      ]
+    },
+    "verdict": {
+      "const": "NO_SOURCE"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "status"
+        ],
+        "properties": {
+          "category": {
+            "enum": [
+              "Lint",
+              "Format",
+              "Type check",
+              "Test",
+              "Coverage gaps",
+              "Security",
+              "Spec compliance",
+              "Dependencies"
+            ]
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "WARN",
+              "FAIL",
+              "SKIP"
+            ]
+          },
+          "details": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "coverage_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "module",
+          "has_tests"
+        ],
+        "properties": {
+          "module": {
+            "type": "string"
+          },
+          "has_tests": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "required": [
+        "verdict"
+      ],
+      "properties": {
+        "verdict": {
+          "const": "NO_SOURCE"
+        }
+      }
+    },
+    {
+      "required": [
+        "mode",
+        "categories"
+      ]
+    }
+  ]
+}

@@ -1,12 +1,14 @@
 ---
 description: Review a completed feature against its spec. Auto-detects the feature if no argument given.
 argument-hint: "[feature-name]"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent, EnterWorktree
 ---
 
 # Review
 
 ## Step 0: Detect current state
+
+**Locate the track first.** Features in progress live in their own git worktrees (`.claude/worktrees/{NNN}-{name}`), so `specs/{NNN}-{name}/` may not exist in your current directory. If a feature name is given and its `spec.md` is not found here, run `git worktree list --porcelain` and look in each worktree. If it is found in another worktree, switch to it with the `EnterWorktree` tool (`path` = that worktree) and continue from there; if it exists nowhere, use the usual "run `/specify`" message. With no feature name, consider the tracks of all worktrees and prefer the one in your current worktree.
 
 Use your native tools to collect project state:
 
@@ -26,64 +28,48 @@ Use your native tools to collect project state:
 **`$ARGUMENTS` provided, track exists →** Check state:
 - No tasks → "No tasks yet. Run `/tasks $ARGUMENTS` first." STOP.
 - Unchecked tasks remain → "There are {remaining} unfinished tasks. Complete them with `/implement $ARGUMENTS` first, or confirm to review partial progress." Wait for confirmation.
-- Review already exists → "Review already done. Overwrite it?" Wait for confirmation.
+- Review already exists → "Review already done. Overwrite it?" Wait for confirmation. (When called from `/build` during convergence, overwrite without asking and keep the `## Convergence History`.)
 - All tasks done, no review → Proceed to Step 1.
 
 ---
 
-## Step 1: Load artifacts
+## Step 1: Locate artifacts
 
-Read:
-- `specs/{NNN}-$ARGUMENTS/spec.md` — Acceptance criteria
-- `specs/{NNN}-$ARGUMENTS/plan.md` — Architecture decisions
-- `specs/{NNN}-$ARGUMENTS/tasks.md` — Task list
-- `specs/constitution.md` — Non-negotiable principles (if it exists)
-- `PRD.md` — Error handling patterns, relevant requirements (if it exists)
-- `DESIGN.md` — Tokens, component inventory, surface conventions, a11y baseline (if it exists and the plan has a "Design Mobilization" section)
+Resolve the paths (do not read the source code yourself — the reviewers do):
+- `specs/{NNN}-$ARGUMENTS/spec.md` — acceptance criteria
+- `specs/{NNN}-$ARGUMENTS/plan.md` — architecture decisions
+- `specs/{NNN}-$ARGUMENTS/tasks.md` — task list
+- `specs/constitution.md`, `PRD.md`, `DESIGN.md` (only when the plan has a "Design Mobilization" section), `CLAUDE.md` — whichever exist
+
+Read `CLAUDE.md` and extract the test, lint, format and type check commands. If missing: WARN "No build commands found in CLAUDE.md — quality gates will be SKIP. Add a '## Build & Run Commands' section to enable them."
 
 ## Step 2: Task completion check
 
-Verify all tasks checked. List any `[BLOCKED]` tasks.
+Verify all tasks are checked. List any `[BLOCKED]` tasks. Check traceability: every `AC-n` appears in at least one task's `Covers`.
 
-## Step 3: Quality checks
+## Step 3: Independent review (fan-out)
 
-### Discover and run build commands
+The reviewers must not be the agent that wrote the code. Launch **both in a single message** (parallel):
 
-Read `CLAUDE.md` and extract test, lint, format, and type check commands.
+1. `spec-reviewer` — spec/plan/constitution/DESIGN.md compliance, acceptance criteria with evidence.
+2. `quality-reviewer` — build commands and code quality of the feature's diff.
 
-If `CLAUDE.md` is missing or doesn't define build commands: WARN "No build commands found in CLAUDE.md — skipping automated quality checks. Add a '## Build & Run Commands' section to enable them."
+(Plugin install: `subagent_type` is `feature-flow:spec-reviewer` / `feature-flow:quality-reviewer`; symlink install: bare names; if unavailable, use `general-purpose` with the matching agent file as its role: `${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` as a plugin, `.claude/agents/{name}.md` with `install.sh`.)
 
-Run each discovered command and record results.
+Give each only: the artifact paths from Step 1, the build commands, and the base branch to diff against (`git merge-base HEAD main`). Wait for both (barrier). Each ends with one fenced `json` block; if a block is missing or malformed, relaunch that reviewer once, then record the review as `WARN: reviewer returned no valid report` instead of guessing.
 
-## Step 4: Spec-specific checks
+## Step 4: Merge the reports (fan-in)
 
-Review the implementation against patterns defined in the spec and constitution:
+You are the only writer of `review.md`. Merge:
+- **Acceptance criteria**: from `spec-reviewer.acceptance_criteria` (all ACs must be present; a missing AC is `WARN`)
+- **Architecture / Constitution / Spec compliance**: from `spec-reviewer`
+- **Quality gates**: from `quality-reviewer.quality_gates`
+- **Issues**: union of both `issues` lists; deduplicate issues that point at the same cause (keep the highest severity and both fixes), sort by severity (`blocker` > `major` > `minor`)
 
-### 4.1 Constitution compliance
-If `specs/constitution.md` exists, verify each principle against the implementation. Otherwise: "No constitution found — run `/constitution` to create one. Skipping compliance checks."
-
-### 4.2 Error handling
-If the spec or PRD defines error handling patterns, verify they are followed.
-Use Grep to search for error handling patterns in the source files modified by this feature.
-
-### 4.3 Codebase patterns
-Read `CLAUDE.md` for "Key patterns" or architectural conventions. Verify the implementation follows them.
-If CLAUDE.md defines specific patterns (e.g., structured error returns, response formatting), grep for adherence.
-
-### 4.4 Design system compliance
-If `DESIGN.md` exists AND the plan declared design mobilization, verify:
-- UI code references declared tokens by name (grep for raw hex colors, hardcoded pixel spacing not matching the scale, ad-hoc shadows) — flag any drift from the token system.
-- Every rendered component appears in the `Component Inventory` section.
-- The five state conventions (loading, empty, error, success, offline) are implemented for each interactive surface the feature touches.
-- A11y baseline holds: focus management, keyboard support, contrast, `prefers-reduced-motion`, color independence.
-
-If `DESIGN.md` is absent and the feature is user-facing: WARN "No DESIGN.md — UI conformance not checked. Run `/design`."
-
-### 4.5 Acceptance criteria
-For each acceptance criterion in the spec, verify:
-- Is there code that implements it?
-- Is there a test that covers it?
-- Does it pass?
+Verdict rules (apply mechanically):
+- **Needs work**: any `blocker` or `major` issue, any `FAIL` AC, or any quality gate `FAIL`
+- **Pass with notes**: only `minor` issues or `WARN` items
+- **Ready to merge**: no issue, no `WARN`
 
 ## Step 5: Write review.md
 
@@ -93,15 +79,19 @@ Create `specs/{NNN}-$ARGUMENTS/review.md`:
 # Review: {Feature Name}
 
 **Date**: {today}
-**Reviewer**: Claude Code (automated)
+**Reviewers**: spec-reviewer, quality-reviewer (independent agents)
 
 ## Task Completion
 - Total: {X} | Completed: {Y} | Blocked: {Z}
 
 ## Acceptance Criteria
-| # | Criterion | Status | Notes |
-|---|---|---|---|
-| AC-1 | ... | PASS / FAIL / WARN | ... |
+| # | Criterion | Status | Evidence | Notes |
+|---|---|---|---|---|
+| AC-1 | ... | PASS / FAIL / WARN | file:line / test | ... |
+
+## Traceability
+| AC | Covered by tasks | Test |
+|---|---|---|
 
 ## Architecture Compliance
 | Decision | Followed? | Notes |
@@ -133,8 +123,12 @@ Create `specs/{NNN}-$ARGUMENTS/review.md`:
 |---|---|---|
 
 ## Issues Found
-| Severity | Description | Fix |
-|---|---|---|
+| Severity | Source | Location | Description | Fix |
+|---|---|---|---|---|
+
+## Convergence History
+| Round | Failing ACs | Blocker+major issues | Verdict |
+|---|---|---|---|
 
 ## Verdict
 **{Ready to merge / Pass with notes / Needs work}**
@@ -142,7 +136,7 @@ Create `specs/{NNN}-$ARGUMENTS/review.md`:
 
 ## Step 6: Update statuses
 
-If ready to merge: update spec.md status to "Complete", update specs/roadmap.md feature status to "Complete".
+If ready to merge (or pass with notes): update spec.md status to "Complete". (Do not edit `specs/roadmap.md`: a feature is complete for the roadmap once its track is merged into `main` with a "Complete" spec.)
 
 ## Step 7: Present verdict and next steps
 
@@ -150,6 +144,7 @@ If ready to merge: update spec.md status to "Complete", update specs/roadmap.md 
 2. If ready to merge:
    - Suggest: "Run `/qa` for a project-wide health check, then `/ship $ARGUMENTS` to create the PR."
    - Check roadmap for next feature: "Next from the roadmap: **{next-feature}** — run `/specify`"
-3. If needs work:
-   - List exact fixes needed
-   - "Fix these, then run `/review $ARGUMENTS` again."
+3. If needs work — **convergence**:
+   - List the exact fixes (the `fix` field of each blocker/major issue).
+   - Propose: "Add these {N} corrective tasks to `tasks.md` (as `Phase C{round}`, with `Covers`/`Depends-on`/`Files`) and run `/build $ARGUMENTS`?" On confirmation, append them using the same task format and wave rules as `/tasks`, then stop. (`/build` does this automatically, up to `--max-rounds`.)
+   - Otherwise: "Fix these, then run `/review $ARGUMENTS` again."

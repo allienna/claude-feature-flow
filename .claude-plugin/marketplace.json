@@ -1,17 +1,17 @@
 {
-  "name": "claude-feature-flow",
+  "name": "feature-flow",
   "owner": {
     "name": "Aurélien Allienne",
     "email": "aurelien.allienne@gmail.com"
   },
   "metadata": {
-    "description": "Structured feature development workflow for Claude Code"
+    "description": "Spec-driven feature development workflow for Claude Code"
   },
   "plugins": [
     {
-      "name": "claude-feature-flow",
+      "name": "feature-flow",
       "source": "./",
-      "description": "Structured feature development workflow — from PRD to merged PR",
+      "description": "Structured feature development workflow — from PRD to merged PR, with parallel subagent orchestration and git worktrees",
       "version": "1.0.0"
     }
   ]

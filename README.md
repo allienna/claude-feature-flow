@@ -1,49 +1,54 @@
-# claude-feature-flow
+# feature-flow
 
-A reusable set of Claude Code slash commands that provide a structured feature development workflow — from product requirements to merged PR.
-
-## Workflow
+A Claude Code plugin that takes a product **from PRD to merged pull request** through a spec-driven pipeline — now with an **orchestrator**: independent tasks run in parallel in isolated git worktrees, an independent pair of reviewers grades the result, and a convergence loop fixes the gaps until the spec is satisfied.
 
 ```
-/prd → /constitution → /design → /roadmap → /specify → /plan → /tasks → /implement → /review → /qa → /ship → /merge
+/prd → /constitution → /design → /roadmap
+        per feature, in its own worktree:
+/specify → (/clarify) → /plan → /tasks → (/analyze) → /build → /ship → /merge
 ```
 
-### Core workflow
+## Highlights
 
-| Command | Description |
-|---------|-------------|
-| `/prd` | Create or update the Product Requirements Document through guided discovery |
-| `/constitution` | Generate or update the project constitution from the PRD |
-| `/design` | Create or update `DESIGN.md` — the project design system (tokens, components, surfaces, states, a11y) |
-| `/roadmap` | Generate or update the feature roadmap from the PRD |
-| `/specify` | Create a feature specification (auto-detects the next feature) |
-| `/plan` | Create a technical implementation plan from a spec (auto-detects) |
-| `/tasks` | Break a plan into atomic tasks (auto-detects) |
-| `/implement` | Implement the next pending task (auto-detects) |
-| `/review` | Review a completed feature against its spec (auto-detects) |
-| `/qa` | Run project-wide quality audit |
-| `/ship` | Create branch, commit, push and open a PR |
+- **Spec-driven, file-based.** Every phase reads and writes Markdown artifacts in your repo (`PRD.md`, `specs/NNN-feature/{spec,plan,tasks,review}.md`). Any step can be resumed, reviewed or edited by hand.
+- **Orchestrated parallel builds.** `/build` computes execution *waves* from task dependencies and declared file scopes, fans out `implementer` subagents (each in its own worktree), merges their structured reports, and checks the integrated result.
+- **Independent review.** `spec-reviewer` and `quality-reviewer` are read-only agents that did not write the code. The verdict is computed by rules, not impressions.
+- **Convergence.** Review findings become corrective tasks; `/build` rebuilds until clean, out of rounds, or no longer progressing.
+- **Several features at once.** `/specify` gives each feature its own worktree and branch, so two sessions never share a working tree.
+- **Testable specs.** Acceptance criteria are Given/When/Then scenarios; unknowns are `[NEEDS CLARIFICATION]` markers resolved by `/clarify`; `/analyze` cross-checks the artifacts.
+- **Human gates stay human.** Spec, plan, commit message and squash message are yours.
 
-### Automation & maintenance
+## Commands
 
-| Command | Description |
-|---------|-------------|
-| `/build` | Full pipeline: implement all tasks, review, qa, ship (use `/build quick` to skip review) |
-| `/merge` | Address PR comments, squash merge, and update local main |
-| `/review-pr` | Fetch PR review comments, fix issues, reply to each comment |
-| `/status` | Show project status and suggest the next action |
+| Group | Commands |
+|---|---|
+| Foundations | `/prd` `/constitution` `/design` `/roadmap` |
+| Feature | `/specify` `/clarify` `/plan` `/tasks` `/analyze` `/implement` `/review` `/qa` |
+| Automation | `/build` |
+| Delivery | `/ship` `/merge` `/review-pr` |
+| Navigation | `/status` |
 
-## Prerequisites
+Full reference: [docs/commands](docs/commands/index.md). Four agents ship with the plugin: [`implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`](docs/agents/index.md).
 
-Commands auto-discover your project setup from:
+## Quick start
 
-- **`PRD.md`** — Product requirements (used by `/prd`, `/roadmap`, `/specify`, `/plan`)
-- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/implement`, `/qa`, `/review`, `/ship`)
-- **`DESIGN.md`** — Design system: tokens, components, surfaces, states, a11y (used by `/specify`, `/plan`, `/implement`, `/review`)
-- **`specs/`** — Feature tracks created by the workflow
-- **`design/mockups/`** (optional) — Mockup files ingested by `/design` to reconcile visuals with the design system
+1. `/prd`, `/constitution`, `/design`, `/roadmap` — then **commit these to `main`**
+2. `/specify` — creates the feature worktree and spec; `/clarify` if anything is vague
+3. `/plan` → `/tasks` → `/build` — then `/ship` and `/merge`
+4. `/status` at any time tells you the next command
 
-No project-specific configuration needed. Commands detect your tech stack, test runner, linter, and formatter from `CLAUDE.md`.
+Set `worktree.baseRef` to `"head"` in your Claude Code settings for parallel worker isolation, and give your project a `CLAUDE.md` with a `## Build & Run Commands` section. Details: [Getting started](docs/getting-started.md).
+
+## Documentation
+
+| | |
+|---|---|
+| [Getting started](docs/getting-started.md) | install, settings, first feature end to end |
+| [Workflow](docs/concepts/workflow.md) · [Artifacts](docs/concepts/artifacts.md) · [State machine](docs/concepts/state-machine.md) | the pipeline and its files |
+| [Orchestration](docs/concepts/orchestration.md) · [Parallelism and worktrees](docs/concepts/parallelism-and-worktrees.md) | how `/build` parallelizes safely |
+| [Parallel features](docs/guides/parallel-features.md) · [Writing good specs](docs/guides/writing-good-specs.md) · [CLAUDE.md setup](docs/guides/claude-md-setup.md) · [Tuning and cost](docs/guides/tuning-and-cost.md) · [Troubleshooting](docs/guides/troubleshooting.md) | guides |
+| [Architecture](docs/architecture/overview.md) · [Decisions](docs/architecture/decisions.md) | why it works this way |
+| [Migration 1.x → 2.0](docs/migration/1.x-to-2.0.md) · [Changelog](CHANGELOG.md) · [Contributing](docs/contributing.md) | upgrading and contributing |
 
 ## Install
 
@@ -53,13 +58,13 @@ Add the marketplace and install the plugin from within Claude Code:
 
 ```
 /plugin marketplace add allienna/claude-feature-flow
-/plugin install claude-feature-flow@claude-feature-flow
+/plugin install feature-flow@feature-flow
 ```
 
 Or from the CLI:
 
 ```bash
-claude plugin install claude-feature-flow@claude-feature-flow
+claude plugin install feature-flow@feature-flow
 ```
 
 ### From a local clone
@@ -71,7 +76,7 @@ claude --plugin-dir ~/claude-feature-flow
 
 ### Via symlinks (legacy)
 
-The included `install.sh` script links commands into your Claude Code configuration:
+The included `install.sh` script links commands (and the `agents/` used by `/build`, `/review` and `/qa`) into your Claude Code configuration:
 
 ```bash
 git clone git@github.com:allienna/claude-feature-flow.git ~/claude-feature-flow
@@ -87,14 +92,14 @@ Symlinks propagate updates automatically — pull the latest and all projects ge
 
 ### Manual
 
-Copy the `commands/*.md` files into your `.claude/commands/` directory.
+Copy the `commands/*.md` files into your `.claude/commands/` directory and the `agents/*.md` files into `.claude/agents/`.
 
 ## Updating
 
 **Marketplace install** — update via CLI or slash command:
 
 ```bash
-claude plugin update claude-feature-flow@claude-feature-flow
+claude plugin update feature-flow@feature-flow
 # or from within Claude Code:
 /plugin marketplace update
 ```
@@ -106,16 +111,6 @@ cd ~/claude-feature-flow && git pull
 ```
 
 Changes propagate immediately since Claude Code reads the files directly.
-
-## Getting started
-
-1. Run `/prd` to create your Product Requirements Document through a guided interview
-2. Run `/constitution` to establish non-negotiable project principles
-3. Run `/design` to produce `DESIGN.md` — the design system referenced by every downstream UI-touching command
-4. Run `/roadmap` to break the PRD into ordered features
-5. Run `/specify` to detail the first feature, then `/plan` and `/tasks`
-6. Run `/implement` to start building — or `/build` to run the full pipeline
-7. Run `/status` at any time to see where you are and what to do next
 
 ## Versioning
 
