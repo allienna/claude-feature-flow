@@ -5,7 +5,7 @@ A reusable set of Claude Code slash commands that provide a structured feature d
 ## Workflow
 
 ```
-/prd → /constitution → /design → /roadmap → /specify → /plan → /tasks → /implement → /review → /qa → /ship → /merge
+/prd → /constitution → /design → /roadmap → /specify → (/clarify) → /plan → /tasks → (/analyze) → /build → /ship → /merge
 ```
 
 ### Core workflow
@@ -16,29 +16,46 @@ A reusable set of Claude Code slash commands that provide a structured feature d
 | `/constitution` | Generate or update the project constitution from the PRD |
 | `/design` | Create or update `DESIGN.md` — the project design system (tokens, components, surfaces, states, a11y) |
 | `/roadmap` | Generate or update the feature roadmap from the PRD |
-| `/specify` | Create a feature specification (auto-detects the next feature) |
+| `/specify` | Create a feature specification with testable (Given/When/Then) acceptance criteria and `[NEEDS CLARIFICATION]` markers |
+| `/clarify` | Resolve spec ambiguities one question at a time before planning |
 | `/plan` | Create a technical implementation plan from a spec (auto-detects) |
-| `/tasks` | Break a plan into atomic tasks (auto-detects) |
+| `/tasks` | Break a plan into atomic tasks with `Depends-on`, `Files`, `Covers` and computed parallel execution waves |
+| `/analyze` | Read-only consistency check across PRD, spec, plan, tasks and DESIGN.md (parallel analysts) |
 | `/implement` | Implement the next pending task (auto-detects) |
-| `/review` | Review a completed feature against its spec (auto-detects) |
-| `/qa` | Run project-wide quality audit |
+| `/review` | Independent review by two parallel agents (spec compliance + code quality), merged into `review.md` |
+| `/qa` | Run project-wide quality audit (delegated to an isolated `qa-verifier` agent) |
 | `/ship` | Create branch, commit, push and open a PR |
 
 ### Automation & maintenance
 
 | Command | Description |
 |---------|-------------|
-| `/build` | Full pipeline: implement all tasks, review, qa, ship (use `/build quick` to skip review) |
+| `/build` | Orchestrated pipeline: implement tasks in parallel waves, review, converge on gaps, qa, ship (`/build quick` skips review and ship) |
 | `/merge` | Address PR comments, squash merge, and update local main |
 | `/review-pr` | Fetch PR review comments, fix issues, reply to each comment |
 | `/status` | Show project status and suggest the next action |
+
+## How `/build` orchestrates
+
+`/build` is an **orchestrator**: it dispatches workers, waits at a barrier, merges their structured reports, and is the only writer of `tasks.md`. Workers and reviewers run in fresh contexts, so the orchestrator's context stays small even on large features.
+
+| Phase | Pattern | Agents |
+|-------|---------|--------|
+| Implement | per wave: fan-out N tasks in parallel (default 3, `--parallel=N`) → barrier → fan-in JSON reports → wave-level test/lint/format run | `implementer` × N |
+| Review | fan-out two independent reviewers → merge into `review.md` | `spec-reviewer` ‖ `quality-reviewer` |
+| Converge | each blocker/major issue becomes a corrective task; loop until the verdict clears, `--max-rounds` (default 2) is hit, or a round makes no progress | back to the waves |
+| QA | one isolated verifier | `qa-verifier` |
+
+Safety rules: tasks in the same wave have **disjoint `Files`** (validated by `/tasks` and again by `/build`); workers may only write inside their `Files`, which `/build` verifies via `git status` after each wave; reviewers are read-only and never saw the code being written; `/ship` still asks for human confirmation. A `tasks.md` without `Depends-on`/`Files` (older format) runs sequentially.
+
+The agents live in `agents/` (`implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`) and are namespaced `claude-feature-flow:<name>` when installed as a plugin.
 
 ## Prerequisites
 
 Commands auto-discover your project setup from:
 
 - **`PRD.md`** — Product requirements (used by `/prd`, `/roadmap`, `/specify`, `/plan`)
-- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/implement`, `/qa`, `/review`, `/ship`)
+- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/build`, `/implement`, `/qa`, `/review`, `/ship`). `/constitution` can also create an `AGENTS.md` so other coding agents share the same context
 - **`DESIGN.md`** — Design system: tokens, components, surfaces, states, a11y (used by `/specify`, `/plan`, `/implement`, `/review`)
 - **`specs/`** — Feature tracks created by the workflow
 - **`design/mockups/`** (optional) — Mockup files ingested by `/design` to reconcile visuals with the design system
@@ -71,7 +88,7 @@ claude --plugin-dir ~/claude-feature-flow
 
 ### Via symlinks (legacy)
 
-The included `install.sh` script links commands into your Claude Code configuration:
+The included `install.sh` script links commands (and the `agents/` used by `/build`, `/review` and `/qa`) into your Claude Code configuration:
 
 ```bash
 git clone git@github.com:allienna/claude-feature-flow.git ~/claude-feature-flow
@@ -87,7 +104,7 @@ Symlinks propagate updates automatically — pull the latest and all projects ge
 
 ### Manual
 
-Copy the `commands/*.md` files into your `.claude/commands/` directory.
+Copy the `commands/*.md` files into your `.claude/commands/` directory and the `agents/*.md` files into `.claude/agents/`.
 
 ## Updating
 
@@ -113,8 +130,8 @@ Changes propagate immediately since Claude Code reads the files directly.
 2. Run `/constitution` to establish non-negotiable project principles
 3. Run `/design` to produce `DESIGN.md` — the design system referenced by every downstream UI-touching command
 4. Run `/roadmap` to break the PRD into ordered features
-5. Run `/specify` to detail the first feature, then `/plan` and `/tasks`
-6. Run `/implement` to start building — or `/build` to run the full pipeline
+5. Run `/specify` to detail the first feature, `/clarify` if anything is ambiguous, then `/plan` and `/tasks`
+6. Optionally run `/analyze` to cross-check the artifacts, then `/build` to run the full pipeline — or `/implement` to go task by task
 7. Run `/status` at any time to see where you are and what to do next
 
 ## Versioning

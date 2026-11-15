@@ -35,7 +35,9 @@ Run each discovered command. If any gate fails, STOP and report the failure.
 
 ## Step 3: Create branch
 
-If on `main`, create a new branch with a descriptive name based on the changes:
+If a feature track exists, you must be inside its worktree/branch (`feat/{NNN}-...`): verify with `git branch --show-current` and stay on it — the branch was created by `/specify`. If you are on `main` or the wrong branch → STOP and tell the user which worktree to enter (`.claude/worktrees/{NNN}-{feature}`).
+
+If there is no feature track and you are on `main`, create a new branch with a descriptive name based on the changes:
 - `docs/...` for documentation
 - `feat/{NNN}-...` for features (use track number if available)
 - `fix/...` for fixes

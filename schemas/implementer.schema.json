@@ -1,0 +1,87 @@
+{
+  "title": "implementer report",
+  "type": "object",
+  "required": [
+    "task_id",
+    "status",
+    "summary",
+    "files_changed",
+    "tests_run",
+    "tests_passed",
+    "blockers",
+    "mode"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^T-[A-Z0-9]+\\.[0-9]+$"
+    },
+    "status": {
+      "enum": [
+        "done",
+        "failed",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests_run": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests_passed": {
+      "type": "boolean"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "enum": [
+        "worktree",
+        "none"
+      ]
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "branch": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "worktree"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "base_sha",
+          "head_sha",
+          "branch"
+        ]
+      }
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

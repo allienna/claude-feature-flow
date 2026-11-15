@@ -24,7 +24,8 @@ Use your native tools to collect project state:
 
 **`$ARGUMENTS` provided, track exists →** Check state:
 - No spec → "No spec. Run `/specify $ARGUMENTS` first." STOP.
-- Spec is Draft with open questions → "Spec has open questions. Resolve them first, then approve." STOP.
+- Spec contains any `[NEEDS CLARIFICATION` marker (use Grep) → "Spec has {N} unresolved clarification marker(s). Run `/clarify $ARGUMENTS` first." STOP.
+- Spec has acceptance criteria that are not testable scenarios (no Given/When/Then or EARS form, or vague adjectives) → "AC-{n} is not testable as written. Run `/clarify $ARGUMENTS` to tighten it." STOP.
 - Has plan + no tasks → "Plan already exists. Overwrite it, or move on with `/tasks $ARGUMENTS`?"
 - Has plan + tasks with unchecked items → "Plan and tasks exist. Next step: `/implement $ARGUMENTS`"
 - Has plan + tasks all checked → "Everything done! Next step: `/review $ARGUMENTS`"
@@ -81,6 +82,7 @@ Create `specs/{NNN}-$ARGUMENTS/plan.md`:
 ### Phase 1: {Name}
 - Core data structures, interfaces, types
 - Foundation that other phases depend on
+- Name the files each piece creates or modifies — `/tasks` copies them into each task's `Files` scope
 
 ### Phase 2: {Name}
 - Business logic, service layer, integrations
@@ -101,6 +103,10 @@ Create `specs/{NNN}-$ARGUMENTS/plan.md`:
 
 {Remove this section entirely if the feature has no user-facing surface.}
 
+## Parallelism Notes
+- **Independent seams**: {Which parts of the work do not depend on each other (e.g. two services behind the same interface) — `/tasks` uses this to build parallel execution waves}
+- **Shared files (serialization points)**: {Files several parts must touch (registries, routers, config, barrel files) — work on them is serialized}
+
 ## Test Strategy
 - **Mocking approach**: {Appropriate for the project's tech stack — detect from CLAUDE.md and existing tests}
 - **Happy paths**: What to assert for each component
@@ -115,8 +121,7 @@ Create `specs/{NNN}-$ARGUMENTS/plan.md`:
 
 ## Step 4: Update spec status
 
-Update spec.md status to "Approved".
-Update specs/roadmap.md feature status to "Planning".
+Update spec.md status to "Approved". (Do not edit `specs/roadmap.md`: statuses are derived from tracks so parallel features never conflict.)
 
 ## Step 5: Present for review
 

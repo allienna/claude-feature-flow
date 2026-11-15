@@ -55,6 +55,8 @@ Read:
 
 ## Step 3: Implement
 
+Honor the task's declared scope: edit only the paths listed in its **Files** field (if present). If the work needs another file, add it to the task's `Files` in tasks.md (and tell the user), so a later `/build` keeps parallel waves safe.
+
 Implement the task fully based on the **Do** field. Key guidelines:
 - Follow patterns established in the existing codebase
 - Follow coding conventions from `CLAUDE.md` (if it exists)

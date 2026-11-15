@@ -1,7 +1,7 @@
 {
   "name": "claude-feature-flow",
   "version": "1.0.0",
-  "description": "Structured feature development workflow — from PRD to merged PR",
+  "description": "Structured feature development workflow — from PRD to merged PR, with parallel subagent orchestration",
   "author": {
     "name": "Aurélien Allienne",
     "email": "aurelien.allienne@gmail.com",
@@ -9,5 +9,14 @@
   },
   "repository": "https://github.com/allienna/claude-feature-flow",
   "license": "MIT",
-  "keywords": ["workflow", "feature-development", "planning", "code-review", "productivity"]
+  "keywords": [
+    "workflow",
+    "feature-development",
+    "planning",
+    "code-review",
+    "productivity",
+    "spec-driven-development",
+    "subagents",
+    "orchestration"
+  ]
 }
