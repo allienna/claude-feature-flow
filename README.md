@@ -1,66 +1,54 @@
 # claude-feature-flow
 
-A reusable set of Claude Code slash commands that provide a structured feature development workflow — from product requirements to merged PR.
-
-## Workflow
+A Claude Code plugin that takes a product **from PRD to merged pull request** through a spec-driven pipeline — now with an **orchestrator**: independent tasks run in parallel in isolated git worktrees, an independent pair of reviewers grades the result, and a convergence loop fixes the gaps until the spec is satisfied.
 
 ```
-/prd → /constitution → /design → /roadmap → /specify → (/clarify) → /plan → /tasks → (/analyze) → /build → /ship → /merge
+/prd → /constitution → /design → /roadmap
+        per feature, in its own worktree:
+/specify → (/clarify) → /plan → /tasks → (/analyze) → /build → /ship → /merge
 ```
 
-### Core workflow
+## Highlights
 
-| Command | Description |
-|---------|-------------|
-| `/prd` | Create or update the Product Requirements Document through guided discovery |
-| `/constitution` | Generate or update the project constitution from the PRD |
-| `/design` | Create or update `DESIGN.md` — the project design system (tokens, components, surfaces, states, a11y) |
-| `/roadmap` | Generate or update the feature roadmap from the PRD |
-| `/specify` | Create a feature specification with testable (Given/When/Then) acceptance criteria and `[NEEDS CLARIFICATION]` markers |
-| `/clarify` | Resolve spec ambiguities one question at a time before planning |
-| `/plan` | Create a technical implementation plan from a spec (auto-detects) |
-| `/tasks` | Break a plan into atomic tasks with `Depends-on`, `Files`, `Covers` and computed parallel execution waves |
-| `/analyze` | Read-only consistency check across PRD, spec, plan, tasks and DESIGN.md (parallel analysts) |
-| `/implement` | Implement the next pending task (auto-detects) |
-| `/review` | Independent review by two parallel agents (spec compliance + code quality), merged into `review.md` |
-| `/qa` | Run project-wide quality audit (delegated to an isolated `qa-verifier` agent) |
-| `/ship` | Create branch, commit, push and open a PR |
+- **Spec-driven, file-based.** Every phase reads and writes Markdown artifacts in your repo (`PRD.md`, `specs/NNN-feature/{spec,plan,tasks,review}.md`). Any step can be resumed, reviewed or edited by hand.
+- **Orchestrated parallel builds.** `/build` computes execution *waves* from task dependencies and declared file scopes, fans out `implementer` subagents (each in its own worktree), merges their structured reports, and checks the integrated result.
+- **Independent review.** `spec-reviewer` and `quality-reviewer` are read-only agents that did not write the code. The verdict is computed by rules, not impressions.
+- **Convergence.** Review findings become corrective tasks; `/build` rebuilds until clean, out of rounds, or no longer progressing.
+- **Several features at once.** `/specify` gives each feature its own worktree and branch, so two sessions never share a working tree.
+- **Testable specs.** Acceptance criteria are Given/When/Then scenarios; unknowns are `[NEEDS CLARIFICATION]` markers resolved by `/clarify`; `/analyze` cross-checks the artifacts.
+- **Human gates stay human.** Spec, plan, commit message and squash message are yours.
 
-### Automation & maintenance
+## Commands
 
-| Command | Description |
-|---------|-------------|
-| `/build` | Orchestrated pipeline: implement tasks in parallel waves, review, converge on gaps, qa, ship (`/build quick` skips review and ship) |
-| `/merge` | Address PR comments, squash merge, and update local main |
-| `/review-pr` | Fetch PR review comments, fix issues, reply to each comment |
-| `/status` | Show project status and suggest the next action |
+| Group | Commands |
+|---|---|
+| Foundations | `/prd` `/constitution` `/design` `/roadmap` |
+| Feature | `/specify` `/clarify` `/plan` `/tasks` `/analyze` `/implement` `/review` `/qa` |
+| Automation | `/build` |
+| Delivery | `/ship` `/merge` `/review-pr` |
+| Navigation | `/status` |
 
-## How `/build` orchestrates
+Full reference: [docs/commands](docs/commands/index.md). Four agents ship with the plugin: [`implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`](docs/agents/index.md).
 
-`/build` is an **orchestrator**: it dispatches workers, waits at a barrier, merges their structured reports, and is the only writer of `tasks.md`. Workers and reviewers run in fresh contexts, so the orchestrator's context stays small even on large features.
+## Quick start
 
-| Phase | Pattern | Agents |
-|-------|---------|--------|
-| Implement | per wave: fan-out N tasks in parallel (default 3, `--parallel=N`) → barrier → fan-in JSON reports → wave-level test/lint/format run | `implementer` × N |
-| Review | fan-out two independent reviewers → merge into `review.md` | `spec-reviewer` ‖ `quality-reviewer` |
-| Converge | each blocker/major issue becomes a corrective task; loop until the verdict clears, `--max-rounds` (default 2) is hit, or a round makes no progress | back to the waves |
-| QA | one isolated verifier | `qa-verifier` |
+1. `/prd`, `/constitution`, `/design`, `/roadmap` — then **commit these to `main`**
+2. `/specify` — creates the feature worktree and spec; `/clarify` if anything is vague
+3. `/plan` → `/tasks` → `/build` — then `/ship` and `/merge`
+4. `/status` at any time tells you the next command
 
-Safety rules: tasks in the same wave have **disjoint `Files`** (validated by `/tasks` and again by `/build`); workers may only write inside their `Files`, which `/build` verifies via `git status` after each wave; reviewers are read-only and never saw the code being written; `/ship` still asks for human confirmation. A `tasks.md` without `Depends-on`/`Files` (older format) runs sequentially.
+Set `worktree.baseRef` to `"head"` in your Claude Code settings for parallel worker isolation, and give your project a `CLAUDE.md` with a `## Build & Run Commands` section. Details: [Getting started](docs/getting-started.md).
 
-The agents live in `agents/` (`implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`) and are namespaced `claude-feature-flow:<name>` when installed as a plugin.
+## Documentation
 
-## Prerequisites
-
-Commands auto-discover your project setup from:
-
-- **`PRD.md`** — Product requirements (used by `/prd`, `/roadmap`, `/specify`, `/plan`)
-- **`CLAUDE.md`** — Build commands, conventions, tech stack (used by `/build`, `/implement`, `/qa`, `/review`, `/ship`). `/constitution` can also create an `AGENTS.md` so other coding agents share the same context
-- **`DESIGN.md`** — Design system: tokens, components, surfaces, states, a11y (used by `/specify`, `/plan`, `/implement`, `/review`)
-- **`specs/`** — Feature tracks created by the workflow
-- **`design/mockups/`** (optional) — Mockup files ingested by `/design` to reconcile visuals with the design system
-
-No project-specific configuration needed. Commands detect your tech stack, test runner, linter, and formatter from `CLAUDE.md`.
+| | |
+|---|---|
+| [Getting started](docs/getting-started.md) | install, settings, first feature end to end |
+| [Workflow](docs/concepts/workflow.md) · [Artifacts](docs/concepts/artifacts.md) · [State machine](docs/concepts/state-machine.md) | the pipeline and its files |
+| [Orchestration](docs/concepts/orchestration.md) · [Parallelism and worktrees](docs/concepts/parallelism-and-worktrees.md) | how `/build` parallelizes safely |
+| [Parallel features](docs/guides/parallel-features.md) · [Writing good specs](docs/guides/writing-good-specs.md) · [CLAUDE.md setup](docs/guides/claude-md-setup.md) · [Tuning and cost](docs/guides/tuning-and-cost.md) · [Troubleshooting](docs/guides/troubleshooting.md) | guides |
+| [Architecture](docs/architecture/overview.md) · [Decisions](docs/architecture/decisions.md) | why it works this way |
+| [Migration 1.x → 2.0](docs/migration/1.x-to-2.0.md) · [Changelog](CHANGELOG.md) · [Contributing](docs/contributing.md) | upgrading and contributing |
 
 ## Install
 
@@ -123,16 +111,6 @@ cd ~/claude-feature-flow && git pull
 ```
 
 Changes propagate immediately since Claude Code reads the files directly.
-
-## Getting started
-
-1. Run `/prd` to create your Product Requirements Document through a guided interview
-2. Run `/constitution` to establish non-negotiable project principles
-3. Run `/design` to produce `DESIGN.md` — the design system referenced by every downstream UI-touching command
-4. Run `/roadmap` to break the PRD into ordered features
-5. Run `/specify` to detail the first feature, `/clarify` if anything is ambiguous, then `/plan` and `/tasks`
-6. Optionally run `/analyze` to cross-check the artifacts, then `/build` to run the full pipeline — or `/implement` to go task by task
-7. Run `/status` at any time to see where you are and what to do next
 
 ## Versioning
 
