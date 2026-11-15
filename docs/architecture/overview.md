@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TB
-    subgraph Plugin["claude-feature-flow plugin"]
+    subgraph Plugin["feature-flow plugin"]
         CMD["commands/*.md — 17 slash commands"]
         AG["agents/*.md — implementer, spec-reviewer, quality-reviewer, qa-verifier"]
         SCH["schemas/*.json — output contracts"]

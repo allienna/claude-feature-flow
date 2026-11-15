@@ -1,5 +1,5 @@
 {
-  "name": "claude-feature-flow",
+  "name": "feature-flow",
   "owner": {
     "name": "Aurélien Allienne",
     "email": "aurelien.allienne@gmail.com"
@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "claude-feature-flow",
+      "name": "feature-flow",
       "source": "./",
       "description": "Structured feature development workflow — from PRD to merged PR, with parallel subagent orchestration and git worktrees",
       "version": "1.0.0"

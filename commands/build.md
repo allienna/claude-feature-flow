@@ -30,7 +30,7 @@ tasks.md ──► waves ──► [fan-out: implementer × N] ──barrier─�
 - `--max-rounds=N` → max convergence rounds (default **2**)
 - `--isolate=worktree|none` → how parallel workers are isolated (default **`worktree`** for waves of 2+ tasks; a single-task wave always runs in place). `none` = shared working tree, protected only by disjoint `Files` and a `git status` scope check — use it when per-worktree setup is too heavy or tests share a fixed port/database
 
-**Agents**: `implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`. Installed as a plugin their `subagent_type` is `claude-feature-flow:{name}`; installed with `install.sh` it is `{name}`. If a type is not available, launch a `general-purpose` agent and give it the content of the matching agent file as its role and output contract (`${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` when installed as a plugin, `.claude/agents/{name}.md` with `install.sh`).
+**Agents**: `implementer`, `spec-reviewer`, `quality-reviewer`, `qa-verifier`. Installed as a plugin their `subagent_type` is `feature-flow:{name}`; installed with `install.sh` it is `{name}`. If a type is not available, launch a `general-purpose` agent and give it the content of the matching agent file as its role and output contract (`${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` when installed as a plugin, `.claude/agents/{name}.md` with `install.sh`).
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "name": "claude-feature-flow",
+  "name": "feature-flow",
   "version": "1.0.0",
   "description": "Structured feature development workflow — from PRD to merged PR, with parallel subagent orchestration",
   "author": {

@@ -53,4 +53,4 @@ Claude Code refuses worktrees when `.claude` or `.claude/worktrees` is a symlink
 
 ## Agents not found
 
-Installed with `install.sh`: make sure `.claude/agents/` contains the four agent files (re-run the script). Installed as a plugin: agents are `claude-feature-flow:<name>`. The commands fall back to a `general-purpose` agent with the agent file as its role if a type is unavailable.
+Installed with `install.sh`: make sure `.claude/agents/` contains the four agent files (re-run the script). Installed as a plugin: agents are `feature-flow:<name>`. The commands fall back to a `general-purpose` agent with the agent file as its role if a type is unavailable.

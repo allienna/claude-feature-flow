@@ -1,4 +1,4 @@
-# claude-feature-flow
+# feature-flow
 
 A Claude Code plugin that takes a product **from PRD to merged pull request** through a spec-driven pipeline — now with an **orchestrator**: independent tasks run in parallel in isolated git worktrees, an independent pair of reviewers grades the result, and a convergence loop fixes the gaps until the spec is satisfied.
 
@@ -58,13 +58,13 @@ Add the marketplace and install the plugin from within Claude Code:
 
 ```
 /plugin marketplace add allienna/claude-feature-flow
-/plugin install claude-feature-flow@claude-feature-flow
+/plugin install feature-flow@feature-flow
 ```
 
 Or from the CLI:
 
 ```bash
-claude plugin install claude-feature-flow@claude-feature-flow
+claude plugin install feature-flow@feature-flow
 ```
 
 ### From a local clone
@@ -99,7 +99,7 @@ Copy the `commands/*.md` files into your `.claude/commands/` directory and the `
 **Marketplace install** — update via CLI or slash command:
 
 ```bash
-claude plugin update claude-feature-flow@claude-feature-flow
+claude plugin update feature-flow@feature-flow
 # or from within Claude Code:
 /plugin marketplace update
 ```

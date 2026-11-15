@@ -54,7 +54,7 @@ The reviewers must not be the agent that wrote the code. Launch **both in a sing
 1. `spec-reviewer` — spec/plan/constitution/DESIGN.md compliance, acceptance criteria with evidence.
 2. `quality-reviewer` — build commands and code quality of the feature's diff.
 
-(Plugin install: `subagent_type` is `claude-feature-flow:spec-reviewer` / `claude-feature-flow:quality-reviewer`; symlink install: bare names; if unavailable, use `general-purpose` with the matching agent file as its role: `${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` as a plugin, `.claude/agents/{name}.md` with `install.sh`.)
+(Plugin install: `subagent_type` is `feature-flow:spec-reviewer` / `feature-flow:quality-reviewer`; symlink install: bare names; if unavailable, use `general-purpose` with the matching agent file as its role: `${CLAUDE_PLUGIN_ROOT}/agents/{name}.md` as a plugin, `.claude/agents/{name}.md` with `install.sh`.)
 
 Give each only: the artifact paths from Step 1, the build commands, and the base branch to diff against (`git merge-base HEAD main`). Wait for both (barrier). Each ends with one fenced `json` block; if a block is missing or malformed, relaunch that reviewer once, then record the review as `WARN: reviewer returned no valid report` instead of guessing.
 

@@ -1,6 +1,6 @@
-# claude-feature-flow documentation
+# feature-flow documentation
 
-`claude-feature-flow` is a Claude Code plugin that takes a product from **PRD to merged pull request** through a spec-driven pipeline. Version 2 adds an **orchestrator** that runs independent tasks in parallel with isolated subagents, reviews the result with agents that did not write the code, and loops until the spec is satisfied.
+`feature-flow` is a Claude Code plugin that takes a product from **PRD to merged pull request** through a spec-driven pipeline. Version 2 adds an **orchestrator** that runs independent tasks in parallel with isolated subagents, reviews the result with agents that did not write the code, and loops until the spec is satisfied.
 
 ## Start here
 

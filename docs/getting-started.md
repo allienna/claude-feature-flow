@@ -11,10 +11,10 @@
 
 ```
 /plugin marketplace add allienna/claude-feature-flow
-/plugin install claude-feature-flow@claude-feature-flow
+/plugin install feature-flow@feature-flow
 ```
 
-Installed as a plugin, commands are namespaced (`/claude-feature-flow:build`) and agents are named `claude-feature-flow:implementer`, etc. Other install methods (local clone, `install.sh` symlinks, manual copy) are described in the [README](../README.md#install). With `install.sh`, agents are linked into `.claude/agents/` next to the commands.
+Installed as a plugin, commands are namespaced (`/feature-flow:build`) and agents are named `feature-flow:implementer`, etc. Other install methods (local clone, `install.sh` symlinks, manual copy) are described in the [README](../README.md#install). With `install.sh`, agents are linked into `.claude/agents/` next to the commands.
 
 ## One-time Claude Code setting for parallel builds
 

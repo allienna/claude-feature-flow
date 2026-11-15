@@ -23,6 +23,7 @@ Orchestrated parallel pipeline. See the [migration guide](docs/migration/1.x-to-
 - **BREAKING** `tasks.md` format extended; the 1.x format still runs, sequentially.
 - **BREAKING** Acceptance criteria are Given/When/Then or EARS scenarios; `/plan` refuses untestable criteria and unresolved clarification markers.
 - **BREAKING** `/review` is performed by two independent read-only agents and produces a merged `review.md` with evidence, traceability and convergence history.
+- **BREAKING** The plugin is renamed `feature-flow` (was `claude-feature-flow`, whose `claude-` prefix is reserved): reinstall as `feature-flow@feature-flow`; commands are namespaced `/feature-flow:<command>`.
 - **BREAKING** `/specify` creates a git worktree instead of switching branch in place; foundations must be committed on `main` first.
 - `/qa` runs in an isolated `qa-verifier` agent.
 - Feature commands no longer edit `specs/roadmap.md`; status is derived from tracks.

@@ -1,6 +1,6 @@
 # Agents
 
-Four subagents ship in `agents/`. Installed as a plugin they are named `claude-feature-flow:<name>`; with `install.sh` they are linked into `.claude/agents/` and keep their bare names.
+Four subagents ship in `agents/`. Installed as a plugin they are named `feature-flow:<name>`; with `install.sh` they are linked into `.claude/agents/` and keep their bare names.
 
 | Agent | Used by | Writes code? | Tools | Output |
 |---|---|---|---|---|
